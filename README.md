@@ -1,48 +1,42 @@
-# PRE-RELEASE
-
-Still need to find time to actually document+publish this lib. 
-
-**ETA**: Feb-Mar 2016
-
-\- [Peter Taoussanis]
-
 <a href="https://www.taoensso.com" title="More stuff by @ptaoussanis at www.taoensso.com">
 <img src="https://www.taoensso.com/taoensso-open-source.png" alt="Taoensso open-source" width="400"/></a>
 
 **[CHANGELOG]** | [API] | current [Break Version]:
 
 ```clojure
-[com.taoensso/tempura "0.0.1-SNAPSHOT"] ; TODO
+[com.taoensso/tempura "1.0.0-SNAPSHOT"] ; TODO (not published yet)
 ```
+
+> Please consider helping to [support my continued open-source Clojure/Script work]? 
+> 
+> Even small contributions can add up + make a big difference to help sustain my time writing, maintaining, and supporting Tempura and other Clojure/Script libraries. **Thank you!**
+>
+> \- Peter Taoussanis
 
 # Tempura
 
-### Pure Clojure/Script translations library
+### Pure Clojure/Script i18n translations library
 
-TODO
-
-![Hero]
-
-> TODO
+TODO ; docs
 
 ## Quickstart
 
 Add the necessary dependency to your project:
 
 ```clojure
-[com.taoensso/tempura "0.0.1-SNAPSHOT"]
+[com.taoensso/tempura "1.0.0-SNAPSHOT"]
 ```
 
 And setup your namespace imports:
 
 ```clojure
+(def my-clj-or-cljs-ns
+  (:require [taoensso.tempura :as tempura :refer [tr]]))
 ```
 
 ## FAQ
 
-#### TODO
-
-TODO
+TODO ; Docs
 
 ## Contacting me / contributions
 
@@ -63,6 +57,7 @@ Copyright &copy; 2016 [Peter Taoussanis].
 [@ptaoussanis]: https://www.taoensso.com
 [More by @ptaoussanis]: https://www.taoensso.com
 [Break Version]: https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md
+[support my continued open-source Clojure/Script work]: http://taoensso.com/clojure/backers
 
 <!--- Standard links (repo specific) -->
 [CHANGELOG]: https://github.com/ptaoussanis/tempura/releases
