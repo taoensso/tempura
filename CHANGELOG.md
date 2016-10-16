@@ -1,9 +1,9 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
-## v0.0.1-SNAPSHOT - 2015 Jan 24
-
-> Pending release
+## v1.0.0 - 2016 Oct 16
 
 ```clojure
-[com.taoensso/tempura "0.0.1-SNAPSHOT"]
+[com.taoensso/tempura "1.0.0-RC1"]
 ```
+
+> Initial public release. Sorry for taking so long to finally document+publish this!
