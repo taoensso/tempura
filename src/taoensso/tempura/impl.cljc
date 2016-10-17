@@ -376,7 +376,6 @@
           (fn [dict]
             (reduce
               (fn [acc in]
-                (println [acc in])
                 (assoc acc (enc/merge-keywords (pop in)) (peek in)))
               {} (node-paths map? dict))))
 
