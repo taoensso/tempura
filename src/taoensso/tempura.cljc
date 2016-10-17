@@ -15,11 +15,15 @@
 
 (enc/assert-min-encore-version [2 86 1])
 
-(def ^:dynamic *tr-scope* nil)
 (def ^:dynamic *tr-opts*  nil)
+(def ^:dynamic *tr-scope* nil)
 
-(defmacro with-tr-scope [scope & body] `(binding [*tr-scope* ~scope] ~@body))
 (defmacro with-tr-opts  [opts  & body] `(binding [*tr-opts*  ~opts]  ~@body))
+(defmacro with-tr-scope
+  "`(with-tr-scope :foo.bar (tr _ _ [:baz]))` is equivalent to
+   `(tr _ _ [:foo.bar/baz])`"
+  [scope & body]
+  `(binding [*tr-scope* ~scope] ~@body))
 
 ;;;;
 
@@ -32,7 +36,7 @@
             esc2 (if escape-html? impl/vec-escape-html-in-strs identity)]
 
         (enc/memoize_
-          (fn [res]
+          (fn [res] ; -> [(fn [vargs]) -> <compiled-resource>]
             (enc/cond! ; Nb no keywords, nils, etc.
               (fn?     res) (-> res) ; Completely arb, full control
               (string? res) (-> res esc1 impl/str->vargs-fn)
@@ -52,6 +56,7 @@
 (def default-tr-opts
   {:default-locale :en
    :dict {:en {:missing "[Missing tr resource]"}}
+   :scope-fn (fn [] *tr-scope*)
 
    :cache-dict?      #?(:clj false :cljs true)
    :cache-locales?   #?(:clj false :cljs true)
@@ -59,22 +64,53 @@
 
    :resource-compiler (get-default-resource-compiler {:escape-html? false})
    :missing-resource-fn nil ; Nb return nnil to use as resource
-   #_(fn [{:keys [opts locales resource-ids vargs]}]
+   #_(fn [{:keys [opts locales resource-ids resource-args]}]
        (debugf "Missing tr resource: %s" [locales resource-ids])
        nil)})
 
 (def example-dictionary
-  {:en-GB {:missing ":en-GB missing text"
-           :example {:greet "Good day %1!"}}
+  {:en-GB ; Locale
+   {:missing ":en-GB missing text" ; Fallback for missing resources
+    :example ; You can nest ids if you like
+    {:greet "Good day %1!" ; Note Clojure fn-style %1 args
+     }}
 
-   :en {:missing ":en missing text"
-        :example {:greet "Hello %1"
-                  :farewell "Goodbye %1"
-                  :foo "foo"
-                  :bar "bar"
-                  :bar-copy :en.example/bar}
-        :example-copy :en/example
-        :import {:__load-resource "slurps/i18n.clj"}}})
+   :en ; A second locale
+   {:missing ":en missing text"
+    :example
+    {:greet "Hello %1"
+     :farewell "Goodbye %1"
+     :foo "foo"
+     :bar "bar"
+     :bar-copy :en.example/bar ; Can alias entries
+     :baz [:div "This is a **Hiccup** form"]}
+
+    :example-copy :en/example ; Can alias entire subtrees
+
+    :import-example
+    {:__load-resource ; Inline edn content loaded from disk/resource
+     "resources/i18n.clj"}}})
+
+(comment ; For README
+  (tr {:dict example-dictionary}
+    [:en] ; Vector of descending-preference locales to search
+    [:example/foo] ; Vector of descending-preference resource-ids to search
+    ) ; => "foo"
+
+  (def opts {:dict example-dictionary})
+
+  (tr opts [:en] [:example/invalid :example/bar]) ; => "bar"
+  (tr opts [:en] [:example/invalid "Inline fallback"]) ; => "Inline fallback"
+
+  (tr opts [:en] [:example/greet] ["Steve"]) ; => "Hello Steve"
+
+  (tr opts [:en] [:example/invalid "Hi %1"] ["Steve"]) ; => "Hi Steve"
+
+  (tr opts [:en] [:example/invalid [:div "My **fallback** div"]])
+  ; [:div "My " [:strong "fallback"] " div"]
+
+  (tr [["Please enter your **login details** below:"]])
+  )
 
 ;;;;
 
@@ -104,7 +140,7 @@
             (fn [acc lvar]
               ;; (debugf "Searching: %s" (scoped lvar ?scope resid))
               (when-let [res (get dict (scoped lvar ?scope resid))]
-                (reduced (reduced (reduced res)))))
+                (reduced (reduced (reduced #_[res resid] res)))))
             acc locale-split))
         acc resids))
     nil locale-splits))
@@ -115,6 +151,18 @@
   (if cache?
     (search-resids*-cached dict locale-splits ?scope resids)
     (search-resids*        dict locale-splits ?scope resids)))
+
+#_
+(defmacro vargs "Experimental. Compile-time `impl/vargs`."
+  [x]
+  (if (map? x)
+    (do
+      (assert (enc/revery? enc/pos-int? (keys x))
+        "All arg map keys must be +ive non-zero ints")
+      (impl/vargs x))
+    (have vector? x)))
+
+#_(comment (macroexpand '(vargs {1 (do "1") 2 (do "2")})))
 
 ;;;;
 
@@ -159,11 +207,11 @@
                            ; {<locale> {<k1> ... {<kn> <resource>}}}.
                            ; See also `tempura/example-dictionary`.
 
-      :resource-compiler   ; (fn [resource]) -> [(fn [args]) -> <compiled-resource>].
+      :resource-compiler   ; (fn [resource]) -> [(fn [vargs]) -> <compiled-resource>].
                            ; Useful if you want to customize any part of how
                            ; dictionary resources are compiled.
 
-      :missing-resource-fn ; (fn [{:keys [opts locales resource-ids vargs]}])
+      :missing-resource-fn ; (fn [{:keys [opts locales resource-ids resource-args]}]).
                            ; Called when requested resource/s cannot be
                            ; found. Useful for logging, etc. May return a
                            ; non-nil fallback resource value.
@@ -184,9 +232,10 @@
                            ; resource ids."
 
     ([opts locales resource-ids] (tr opts locales resource-ids nil))
-    ([opts locales resource-ids args]
+    ([opts locales resource-ids resource-args]
 
      (have? vector? resource-ids)
+     ;; (have? [:or nil? vector? map?] resource-args)
 
      (when (seq resource-ids)
        (let [opts (merge-into-default-opts opts *tr-opts*)
@@ -196,7 +245,7 @@
                      cache-resources? #_cache-resource-id-searches?]}
              opts
 
-             locales       (have vector? (if (nil? locales) [] locales))
+             locales       (if (nil? locales) [] (have vector? locales))
              dict          (impl/compile-dictionary cache-dict? dict)
              locale-splits (impl/expand-locales cache-locales?
                              (enc/conj-some locales default-locale))
@@ -204,12 +253,9 @@
              ?fb-resource  (let [last-res (peek resource-ids)]
                              (when-not (keyword? last-res) last-res))
              resource-ids (if ?fb-resource (pop resource-ids) resource-ids)
-             resid-scope
-             (if-let [scope-fn (get opts :scope-fn)]
-               (scope-fn) ; For root scopes, other *vars*, etc.
-               *tr-scope*)
 
-             vargs_ (when args (delay (impl/->vargs args))) ; Experimental
+             ;; For root scopes, disabling scope, other *vars*, etc.
+             resid-scope (when-some [f scope-fn] (f))
 
              ?matching-resource
              (or
@@ -217,19 +263,26 @@
                  (search-resids cache-resources?
                    dict locale-splits resid-scope resource-ids))
 
-               ?fb-resource ; Nb no scope:
+               ?fb-resource
+
+               ;; No scope from here:
 
                (when-let [mrf (get :missing-resource-fn opts)]
                  (mrf ; Nb can return nnil to use result as resource
                    {:opts opts :locales locales :resource-ids resource-ids
-                    :vargs (force vargs_)}))
+                    :resource-args resource-args}))
 
                (search-resids cache-resources?
                  dict locale-splits nil [:missing]))]
 
          (when-let [r ?matching-resource]
-           (let [resource-compiler (get opts :resource-compiler)]
-             ((resource-compiler r) (force vargs_)))))))))
+           (let [resource-compiler (get opts :resource-compiler)
+                 vargs (if-some [args resource-args] (impl/vargs args) [])]
+
+             ;; Could also supply matching resid to compiler, but think it'd
+             ;; be better to keep ids single-purpose. Any meta compiler
+             ;; options, notes, etc. should be provided with res content.
+             ((resource-compiler r) vargs))))))))
 
 (comment
   (tr {} [:en] [:resid1 "Hello there"])   ; => text
@@ -262,8 +315,7 @@
 #?(:clj
    (defn- parse-http-accept-header
      "Parses given HTTP Accept header string and returns ordered vector
-     of choices like. No auto normalization.
-     Ref. https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html 14.4."
+     of choices. No auto normalization. Ref. https://goo.gl/c4ClkR."
      [header]
      (when header
        (when-let [csvs (not-empty (str/split header #","))]

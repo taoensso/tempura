@@ -50,7 +50,8 @@
    (let [parts (str->split-args s)]
      (if (= (count parts) 1) ; Optimize common-case:
        (let [[s1] parts] (fn [vargs] s1))
-       (let [argval-fn (or argval-fn #?(:clj identity :cljs enc/undefined->nil))]
+       (let [;; Why the undefined check? Vestigial?
+             argval-fn (or argval-fn #?(:clj identity :cljs enc/undefined->nil))]
          (fn [vargs]
            (let [sb (enc/str-builder)]
              (run!
@@ -94,6 +95,8 @@
         (rf acc in)))
     [] v))
 
+(comment (mapv-nested keyword ["a" "b" ["c" "d"]]))
+
 #_
 (defn- reduce-kv-nested [rf m]
   (reduce-kv
@@ -103,23 +106,21 @@
         (rf acc k v)))
     {} m))
 
-(comment (mapv-nested keyword ["a" "b" ["c" "d"]]))
-
-;; Also in tl-core
-(defn node-paths
-  ([m] (node-paths m nil))
-  ([m basis]
+(defn node-paths ; Also in tl-core
+  ([          m      ] (node-paths associative? m nil))
+  ([node-pred m      ] (node-paths node-pred    m nil))
+  ([node-pred m basis]
    (let [basis (or basis [])]
      (reduce-kv
        (fn [acc k v]
-         (if-not (associative? v)
+         (if-not (node-pred v)
            (conj acc (conj basis k v))
-           (let [paths-from-basis (node-paths v (conj basis k))]
+           (let [paths-from-basis (node-paths node-pred v (conj basis k))]
              (into acc paths-from-basis))))
        [] m))))
 
 (comment
-  (node-paths {:a1 :A1 :a2 {:b1 :B1 :b2 {:c1 :C1 :c2 :C2}}} [:h])
+  (node-paths associative? {:a1 :A1 :a2 {:b1 :B1 :b2 {:c1 :C1 :c2 :C2}}} [:h])
   (node-paths [:a1 :a2 [:b1 :b2 [:c1 :c2] :b3] :a3 :a4]))
 
 (defn vec->vargs-fn
@@ -234,7 +235,8 @@
 
 (comment (str->split-styles "_hello_ **there** this is a _test_ `*yo`*"))
 
-(defn vec->vtag "[\"foo\"] => [:span \"foo\"], etc."
+(defn vec->vtag
+  "[\"foo\"] -> [:span \"foo\"] as a convenience."
   [v]
   (have? vector? v)
   (let [[v1] v]
@@ -262,8 +264,8 @@
 
 ;;;;
 
-;; Also in tl-core
-(defn escape-html [s]
+(defn escape-html ; Modified from `tl-core/html-esc`
+  [s]
   (-> s
     (enc/str-replace    "&"  "&amp;") ; First!
     (enc/str-replace    "<"  "&lt;")
@@ -356,17 +358,17 @@
         (fn [dict]
           (reduce-kv
             (fn rf1 [acc k v]
-              (if (and (map? v) (not (:__load-resource v)))
-                (assoc acc k (reduce-kv rf1 {} v))
-                (cond
-                  (keyword? v) ; Pointer
-                  (let [path (enc/explode-keyword v)]
-                    (assoc acc k (get-in dict (mapv keyword path))))
+              (cond
+                (keyword? v) ; Pointer
+                (let [path (enc/explode-keyword v)]
+                  (assoc acc k (get-in dict (mapv keyword path))))
 
-                  (map? v) ; File resource
-                  (assoc acc k (load-resource (:__load-resource v)))
+                (map? v)
+                (if-let [io-res (:__load-resource v)]
+                  (assoc acc k (load-resource io-res))
+                  (assoc acc k (reduce-kv rf1 {} v)))
 
-                  :else (assoc acc k v))))
+                :else (assoc acc k v)))
             {} dict))
 
         optimize ; For lookup speed, etc.
@@ -374,8 +376,9 @@
           (fn [dict]
             (reduce
               (fn [acc in]
+                (println [acc in])
                 (assoc acc (enc/merge-keywords (pop in)) (peek in)))
-              {} (node-paths dict))))
+              {} (node-paths map? dict))))
 
         compile-dictionary*
         (enc/memoize* 1000 ; Minor caching to help blunt impact on dev benchmarks
@@ -397,24 +400,14 @@
                       :baz :en.example/bar}
             :example-copy :en/example
             :missing "hi"
-            :import {:__load-resource "slurps/i18n.clj"}}})))
+            :import-example
+            {:__load-resource "resources/i18n.clj"}}})))
 
-(defn ->vargs [args]
-  (enc/cond!
-    (vector? args) args
-    (map?    args)
-    (let [^long max-idx (reduce #(enc/max* ^long %1 ^long %2) 0 (keys args))]
-      (assert (nil? (get args 0)) "Args map is 1-based (not 0-based)")
-      (mapv (fn [idx] (get args idx)) (range 1 (inc max-idx))))
+(defn vargs [x]
+  (if (map? x)
+    (let [^long max-idx (reduce #(enc/max* ^long %1 ^long %2) 0 (keys x))]
+      (assert (nil? (get x 0)) "All arg map keys must be +ive non-zero ints")
+      (mapv (fn [idx] (get x idx)) (range 1 (inc max-idx))))
+    (have vector? x)))
 
-    ;; :else (vec args)
-    :else
-    (throw
-      (ex-info "`tr` called with bad `args` type (was expecting a vector)"
-        {:given args
-         :type  (type args)}))))
-
-(comment
-  (->vargs [:a :b :c])
-  (->vargs {1 :a 2 :b 3 :c 5 :d})
-  (->vargs "foo"))
+(comment (qb 1e4 (vargs {1 :a 2 :b 3 :c 5 :d})))
