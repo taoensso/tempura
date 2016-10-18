@@ -62,7 +62,10 @@ Define a dictionary for translation resources:
      :foo "foo"
      :bar "bar"
      :bar-copy :en.example/bar ; Can alias entries
-     :baz [:div "This is a **Hiccup** form"]}
+     :baz [:div "This is a **Hiccup** form"]
+
+     ;; Can use arbitrary fns as resources
+     :qux (fn [[arg1 arg2]] (str arg1 " and " arg2))}
 
     :example-copy :en/example ; Can alias entire subtrees
 
@@ -86,7 +89,7 @@ And we're ready to go:
 (tr [:example/invalid :example/bar]) ; => "bar"
 (tr [:example/invalid "Inline fallback"]) ; => "Inline fallback"
 
-;; Lets try some argument interpolation
+;; Let's try some argument interpolation
 (tr [:example/greet] ["Steve"]) ; => "Hello Steve"
 
 ;; With inline fallback
@@ -141,7 +144,7 @@ I'll note that since the API is so pleasant, it's actually often much _less_ eff
 
 > Note that `["foo"]` is an optional resource content shorthand for the common-case `[:span "foo"]`
 
-If it's easy to use, it'll be easy to get your developers in the habit of writing content this way - which means that there's a trivial path to adding multilingual support whenever it makes sense to so.
+If it's easy to use, it'll be easy to get your developers in the habit of writing content this way - which means that there's a trivial path to adding multilingual support whenever it makes sense to do so.
 
 ## FAQ
 

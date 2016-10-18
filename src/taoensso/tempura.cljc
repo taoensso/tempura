@@ -83,7 +83,10 @@
      :foo "foo"
      :bar "bar"
      :bar-copy :en.example/bar ; Can alias entries
-     :baz [:div "This is a **Hiccup** form"]}
+     :baz [:div "This is a **Hiccup** form"]
+
+     ;; Can use arbitrary fns as resources
+     :qux (fn [[arg1 arg2]] (str arg1 " and " arg2))}
 
     :example-copy :en/example ; Can alias entire subtrees
 
@@ -109,8 +112,7 @@
   (tr opts [:en] [:example/invalid [:div "My **fallback** div"]])
   ; [:div "My " [:strong "fallback"] " div"]
 
-  (tr [["Please enter your **login details** below:"]])
-  )
+  (tr [["Please enter your **login details** below:"]]))
 
 ;;;;
 
