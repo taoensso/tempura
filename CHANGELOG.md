@@ -1,5 +1,15 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
+## v1.0.0-RC4 - 2016 Nov 13
+
+```clojure
+[com.taoensso/tempura "1.0.0-RC4"]
+```
+
+* **BREAKING**: Ring middleware: use namespaced keys.
+* [#3] **New**: Make `parse-http-accept-header` public (@yogthos).
+
+
 ## v1.0.0-RC3 - 2016 Oct 17
 
 ```clojure
