@@ -315,7 +315,7 @@
 ;;;; Ring middleware
 
 #?(:clj
-   (defn- parse-http-accept-header
+   (defn parse-http-accept-header
      "Parses given HTTP Accept header string and returns ordered vector
      of choices. No auto normalization. Ref. https://goo.gl/c4ClkR."
      [header]
