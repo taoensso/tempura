@@ -351,11 +351,12 @@
    (defn wrap-ring-request
      "Alpha, subject to change.
      Wraps Ring handler to add the following keys to requests:
-       :accept-langs ; e.g. [\"en-ES\" \"en-US\"], parsed from request's
-                     ; Accept-Language HTTP header.
 
-       :tr           ; (partial tr tr-opts (:tr-locales ring-req accept-langs)),
-                     ; (fn ([resource-ids]) ([resource-ids args]))"
+       :tempura/accept-langs ; e.g. [\"en-ES\" \"en-US\"], parsed from
+                             ; request's Accept-Language HTTP header.
+
+       :tempura/tr ; (partial tr tr-opts (:tr-locales ring-req accept-langs)),
+                   ; (fn ([resource-ids]) ([resource-ids args]))"
 
      [handler {:keys [tr-opts]}]
      (fn [ring-req]
@@ -368,7 +369,7 @@
 
              ring-req
              (assoc ring-req
-               #_:tempura/accept-langs :accept-langs accept-langs
-               #_:tempura/tr :tr tr)]
+               :tempura/accept-langs accept-langs
+               :tempura/tr tr)]
 
          (handler ring-req)))))
