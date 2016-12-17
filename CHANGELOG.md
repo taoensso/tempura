@@ -1,5 +1,15 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
+## v1.0.0 - 2016 Dec 17
+
+```clojure
+[com.taoensso/tempura "1.0.0"]
+```
+
+> Non-breaking v1.0.0 release.
+
+* **Fix**: [#4] `tr` doc-string typo
+
 ## v1.0.0-RC4 - 2016 Nov 13
 
 ```clojure
