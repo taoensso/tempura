@@ -180,12 +180,11 @@
 
     (tr
       ;; Opts map to control behaviour:
-      {:dict
-       {:default-locale :en
-        :dict ; Resource dictionary
-        {:en {:missing \"Missing translation\"
-              :example {:greet \"Hello %1\"
-                        :farewell \"Goodbye %1, it was nice to meet you!\"}}}}}
+      {:default-locale :en
+       :dict ; Resource dictionary
+       {:en {:missing \"Missing translation\"
+             :example {:greet \"Hello %1\"
+                       :farewell \"Goodbye %1, it was nice to meet you!\"}}}}
 
       ;; Descending-preference locales to try:
       [:fr-FR :en-GB-variation1]
