@@ -339,22 +339,30 @@
      (is (= [[:en-US :en] [:fr-FR :fr]]    ; Never change langs before vars
            (expand-locales nil [:en-US :fr-FR :en])))))
 
+#?(:clj (def ^:private cached-read-edn (enc/memoize_ enc/read-edn)))
+(defn load-resource [rname]
+  #?(:clj
+     (if-let [edn (enc/slurp-file-resource rname)]
+       (try
+         (cached-read-edn edn) ; Ref transparent
+         (catch Exception e
+           (throw
+             (ex-info "Failed to load dictionary resource"
+               {:rname rname} e))))
+       nil ; Silent failure, lean on :missing
+       #_(throw
+         (ex-info "Failed to load dictionary resource (not found)"
+           {:rname rname})))
+
+     :cljs
+     (throw
+       (ex-info "Runtime resource loading not possible for cljs dictionaries. See `tempura/load-resource-at-compile-time` as an alternative."
+         {:rname rname}))))
+
+(comment (load-resource "foo.edn"))
+
 (def compile-dictionary
-  (let [#?(:clj cached-read-edn) #?(:clj (enc/memoize_ enc/read-edn))
-        load-resource
-        (fn [rname]
-          #?(:cljs
-             nil ; No cljs-side resource importing, just ignore these
-
-             :clj
-             (when-let [edn (enc/slurp-file-resource rname)]
-               (try
-                 (cached-read-edn edn) ; Ref transparent
-                 (catch Exception e
-                   (throw (ex-info "Failed to load dictionary resource"
-                            {:rname rname} e)))))))
-
-        preprocess ; For pointers and slurps, etc.
+  (let [preprocess ; For pointers and slurps, etc.
         (fn [dict]
           (reduce-kv
             (fn rf1 [acc k v]

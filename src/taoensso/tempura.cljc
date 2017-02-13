@@ -168,6 +168,30 @@
 
 ;;;;
 
+#?(:clj
+   (defn load-resource-at-runtime
+     "Experimental, subject to change.
+     Reads and returns an edn resource on classpath, at runtime.
+     Supported by: clj only (cljs support not possible).
+
+     A {:my-key {:__load-resource \"my-file.edn\"}} dictionary entry is
+     equivalent to {:my-key (load-resource-at-runtime \"my-file.edn\")}.
+
+     See also `load-resource-at-compile-time`."
+
+     [rname] (impl/load-resource rname)))
+
+(defmacro load-resource-at-compile-time
+  "Experimental, subject to change.
+  Reads and inlines an edn resource on classpath, at compile-time.
+  Supported by: both clj and cljs.
+
+  See also `load-resource-at-runtime`."
+
+  [rname] (impl/load-resource rname))
+
+(comment (load-resource-at-compile-time "foo.edn"))
+
 (let [;;; Local aliases to avoid var deref
       merge-into-default-opts merge-into-default-opts
       scoped                  scoped
