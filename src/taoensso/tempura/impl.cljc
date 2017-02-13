@@ -349,8 +349,8 @@
            (throw
              (ex-info "Failed to load dictionary resource"
                {:rname rname} e))))
-       nil ; Silent failure, lean on :missing
-       #_(throw
+       ;; nil ; Silent failure, lean on :missing
+       (throw
          (ex-info "Failed to load dictionary resource (not found)"
            {:rname rname})))
 
