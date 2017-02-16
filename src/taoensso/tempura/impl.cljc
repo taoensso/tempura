@@ -297,7 +297,7 @@
   (let [expand-locale
         (enc/memoize_
           (fn [locale]
-            (let [parts (str/split (name locale) #"[_-]")]
+            (let [parts (str/split (str/lower-case (name locale)) #"[_-]")]
               (mapv #(keyword (str/join "-" %))
                 (take-while identity (iterate butlast parts))))))
 
@@ -379,17 +379,20 @@
                 :else (assoc acc k v)))
             {} dict))
 
-        optimize ; For lookup speed, etc.
+        as-paths ; For locale normalization, lookup speed, etc.
         (enc/memoize_ ; Ref transparent
           (fn [dict]
             (reduce
               (fn [acc in]
-                (assoc acc (enc/merge-keywords (pop in)) (peek in)))
+                (let [[locale] in
+                      normed-locale (str/lower-case (name locale))
+                      in (assoc in 0 normed-locale)]
+                  (assoc acc (enc/merge-keywords (pop in)) (peek in))))
               {} (node-paths map? dict))))
 
         compile-dictionary*
         (enc/memoize* 1000 ; Minor caching to help blunt impact on dev benchmarks
-          (fn [dict] (-> dict preprocess preprocess optimize)))
+          (fn [dict] (-> dict preprocess preprocess as-paths)))
 
         compile-dictionary*-cached (enc/memoize_ compile-dictionary*)]
 
@@ -402,13 +405,14 @@
 (comment
   (qb 1e4
     (compile-dictionary nil
-      {:en {:example {:foo "foo"
-                      :bar "bar"
-                      :baz :en.example/bar}
-            :example-copy :en/example
-            :missing "hi"
-            :import-example
-            {:__load-resource "resources/i18n.clj"}}})))
+      {:en-GB
+       {:example {:foo "foo"
+                  :bar "bar"
+                  :baz :en.example/bar}
+        :example-copy :en/example
+        :missing "hi"
+        :import-example
+        {:__load-resource "resources/i18n.clj"}}})))
 
 (defn vargs [x]
   (if (map? x)
