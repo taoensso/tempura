@@ -1,5 +1,15 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
+## v1.1.0 - 2017 Feb 16
+
+```clojure
+[com.taoensso/tempura "1.1.0"]
+```
+
+* **BREAKING**: Throw on missing `:__load-resource` files (used to fail silently)
+* [#5] **New**: Added experimental utils: `load-resource-at-runtime`, `load-resource-at-compile-time`
+* **Impl**: Normalize locale casing: `:en-GB` <=> `:en-gb`
+
 ## v1.0.0 - 2016 Dec 17
 
 ```clojure

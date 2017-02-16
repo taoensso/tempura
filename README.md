@@ -4,7 +4,7 @@
 **[CHANGELOG]** | [API] | current [Break Version]:
 
 ```clojure
-[com.taoensso/tempura "1.0.0"]
+[com.taoensso/tempura "1.1.0"]
 ```
 
 > Please consider helping to [support my continued open-source Clojure/Script work]? 
@@ -34,7 +34,7 @@
 Add the necessary dependency to your project:
 
 ```clojure
-[com.taoensso/tempura "1.0.0"]
+[com.taoensso/tempura "1.1.0"]
 ```
 
 Setup your namespace imports:
@@ -79,7 +79,7 @@ And we're ready to go:
 ```clojure
 (tr ; Just a functional call
   {:dict example-dictionary} ; Opts map, see docstring for details
-  [:en] ; Vector of descending-preference locales to search
+  [:en-GB :fr] ; Vector of descending-preference locales to search
   [:example/foo] ; Vector of descending-preference resource-ids to search
   ) ; => "foo"
 
