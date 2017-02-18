@@ -1,5 +1,13 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
+## v1.1.1 - 2017 Feb 18
+
+```clojure
+[com.taoensso/tempura "1.1.1"]
+```
+
+* **Fix**: broken unit tests
+
 ## v1.1.0 - 2017 Feb 16
 
 ```clojure
