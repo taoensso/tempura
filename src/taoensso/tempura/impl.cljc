@@ -332,12 +332,12 @@
 
 #?(:clj
    (deftest _expand-locales
-     (is (= [[:en-US-var1 :en-US :en] [:fr-FR :fr] [:DE-de :DE]]
-           (expand-locales nil [:en-US-var1 :fr-FR :fr :en-GD :DE-de])))
-     (is (= [[:en] [:fr-FR :fr] [:DE-de :DE]] ; Stop :en-* after base :en
-           (expand-locales nil [:en :en-US-var1 :fr-FR :fr :en-GD :DE-de])))
-     (is (= [[:en-US :en] [:fr-FR :fr]]    ; Never change langs before vars
-           (expand-locales nil [:en-US :fr-FR :en])))))
+     (is (= [[:en-us-var1 :en-us :en] [:fr-fr :fr] [:de-de :de]]
+           (expand-locales nil [:en-us-var1 :fr-fr :fr :en-gd :de-de])))
+     (is (= [[:en] [:fr-fr :fr] [:de-de :de]] ; Stop :en-* after base :en
+           (expand-locales nil [:en :en-us-var1 :fr-fr :fr :en-gd :de-de])))
+     (is (= [[:en-us :en] [:fr-fr :fr]]    ; Never change langs before vars
+           (expand-locales nil [:en-us :fr-fr :en])))))
 
 #?(:clj (def ^:private cached-read-edn (enc/memoize_ enc/read-edn)))
 (defn load-resource [rname]
