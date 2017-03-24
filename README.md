@@ -86,14 +86,22 @@ And we're ready to go:
 (def opts {:dict example-dictionary})
 (def tr (partial tr opts [:en])) ; You'll usu. be using a partial like this
 
-(tr [:example/invalid :example/bar]) ; => "bar"
-(tr [:example/invalid "Inline fallback"]) ; => "Inline fallback"
+;; Grab a resource
+(tr [:example/foo]) ; => "foo"
+
+;; Missing resource
+(tr [:example/invalid])                       ; => ":en missing text"
+(tr [:example/invalid "inline-fallback"])     ; => "inline-fallback"
+(tr [:example/invalid :bar "final-fallback"]) ; => "bar"
 
 ;; Let's try some argument interpolation
 (tr [:example/greet] ["Steve"]) ; => "Hello Steve"
 
 ;; With inline fallback
 (tr [:example/invalid "Hi %1"] ["Steve"]) ; => "Hi Steve"
+
+;; Example of a deeply-nested resource id
+(tr [:example.buttons/login-button "Login!"]) ; => "Login!"
 
 ;; Let's get a Hiccup form for Reactjs, etc.
 ;; Note how the Markdown gets expanded into appropriate Hiccup forms:
