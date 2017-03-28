@@ -1,5 +1,15 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
+## v1.1.2 - 2017 Mar 28
+
+```clojure
+[com.taoensso/tempura "1.1.2"]
+```
+
+> This is a non-breaking hotfix release.
+
+* [#9] **Fix**: Typo was breaking :missing-resource-fn (@brjann)
+
 ## v1.1.1 - 2017 Feb 18
 
 ```clojure
