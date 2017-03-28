@@ -292,7 +292,7 @@
 
                ;; No scope from here:
 
-               (when-let [mrf (get :missing-resource-fn opts)]
+               (when-let [mrf (get opts :missing-resource-fn)]
                  (mrf ; Nb can return nnil to use result as resource
                    {:opts opts :locales locales :resource-ids resource-ids
                     :resource-args resource-args}))
