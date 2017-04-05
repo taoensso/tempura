@@ -84,7 +84,7 @@ And we're ready to go:
   ) ; => "foo"
 
 (def opts {:dict example-dictionary})
-(def tr (partial tr opts [:en])) ; You'll usu. be using a partial like this
+(def tr (partial tr opts [:en])) ; You'll typically use a partial like this
 
 ;; Grab a resource
 (tr [:example/foo]) ; => "foo"
