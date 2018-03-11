@@ -1,5 +1,16 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
+## v1.2.0 - 2018 Mar 11
+
+```clojure
+[com.taoensso/tempura "1.2.0"]
+```
+
+> This is a non-breaking maintenance release.
+
+* [#20] Fix: bug with arg-only resources (@DjebbZ)
+* **Impl**: Bump dependencies, incl. ClojureScript
+
 ## v1.1.2 - 2017 Mar 28
 
 ```clojure
