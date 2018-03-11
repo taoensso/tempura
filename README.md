@@ -78,12 +78,12 @@ And we're ready to go:
 
 ```clojure
 (tr ; Just a functional call
-  {:dict example-dictionary} ; Opts map, see docstring for details
+  {:dict my-tempura-dictionary} ; Opts map, see docstring for details
   [:en-GB :fr] ; Vector of descending-preference locales to search
   [:example/foo] ; Vector of descending-preference resource-ids to search
   ) ; => "foo"
 
-(def opts {:dict example-dictionary})
+(def opts {:dict my-tempura-dictionary})
 (def tr (partial tr opts [:en])) ; You'll typically use a partial like this
 
 ;; Grab a resource
