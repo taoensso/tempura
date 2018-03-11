@@ -38,7 +38,11 @@
                                (= arg-idxs-count (- splits-count 1))))]
           (enc/vinterleave-all splits arg-idxs))))))
 
-(comment (str->split-args "hello %1, how are %1 %2? %% `% ``%"))
+(comment
+  (str->split-args "hello %1, how are %1 %2? %% `% ``%")
+  (str->split-args "hello %1") ; => ["hello " 0]
+  (str->split-args "%1") ; => [0]
+  )
 
 (defn str->vargs-fn
   "Returns a (fn [args-vector]) which replaces simple Clojure-style (%n) args
@@ -47,23 +51,32 @@
   ([s] (str->vargs-fn s nil))
   ([s argval-fn]
    (have? enc/nblank? s)
-   (let [parts (str->split-args s)]
+   (let [parts (str->split-args s)
+         ;; Why the undefined check? Vestigial?
+         argval-fn (or argval-fn #?(:clj identity :cljs enc/undefined->nil))]
+
      (if (= (count parts) 1) ; Optimize common-case:
-       (let [[s1] parts] (fn [vargs] s1))
-       (let [;; Why the undefined check? Vestigial?
-             argval-fn (or argval-fn #?(:clj identity :cljs enc/undefined->nil))]
-         (fn [vargs]
-           (let [sb (enc/str-builder)]
-             (run!
-               (fn [p]
-                 (if (string? p)
-                   (enc/sb-append sb p)
-                   (enc/sb-append sb (str (argval-fn (get vargs p))))))
-               parts)
-             (str sb))))))))
+       (let [[p1] parts]
+         (enc/cond!
+           (string?  p1) (fn [vargs] p1)
+           (integer? p1) (fn [vargs] (str (argval-fn (get vargs p1))))))
+
+       (fn [vargs]
+         (let [sb (enc/str-builder)]
+           (run!
+             (fn [p]
+               (if (string? p)
+                 (enc/sb-append sb p)
+                 (enc/sb-append sb (str (argval-fn (get vargs p))))))
+             parts)
+           (str sb)))))))
 
 (comment
-  ((str->vargs-fn "hello %1 %2") ["a" "b"])
+  (str->split-args "hello %1 %2")
+  ((str->vargs-fn "hello %1 %2") ["a" "b"]) ; "hello a b"
+  ((str->vargs-fn "hello") ["a" "b"]) ; "hello"
+  ((str->vargs-fn "%1")    ["a" "b"]) ; "a"
+  ((str->vargs-fn "%2")    ["a" "b"]) ; "b"
   (let [f1 (fn [vargs] (apply format "hello %s %s" vargs))
         f2 (str->vargs-fn "hello %1 %2")]
     (qb 1e5
