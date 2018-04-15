@@ -50,7 +50,7 @@
   Optimized for fn runtime, not fn creation."
   ([s] (str->vargs-fn s nil))
   ([s argval-fn]
-   (have? enc/nblank? s)
+   (have? string? s)
    (let [parts (str->split-args s)
          ;; Why the undefined check? Vestigial?
          argval-fn (or argval-fn #?(:clj identity :cljs enc/undefined->nil))]
@@ -73,6 +73,7 @@
 
 (comment
   (str->split-args "hello %1 %2")
+  ((str->vargs-fn "")            ["a" "b"]) ; ""
   ((str->vargs-fn "hello %1 %2") ["a" "b"]) ; "hello a b"
   ((str->vargs-fn "hello") ["a" "b"]) ; "hello"
   ((str->vargs-fn "%1")    ["a" "b"]) ; "a"
