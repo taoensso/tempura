@@ -1,5 +1,15 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
+## v1.2.1 - 2018 Apr 15
+
+```clojure
+[com.taoensso/tempura "1.2.1"]
+```
+
+> This is a non-breaking hotfix release.
+
+* [#21] **Fix**: edge-case preventing blank `:missing` vals (@kaosko)
+
 ## v1.2.0 - 2018 Mar 11
 
 ```clojure

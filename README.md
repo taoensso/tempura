@@ -4,7 +4,7 @@
 **[CHANGELOG]** | [API] | current [Break Version]:
 
 ```clojure
-[com.taoensso/tempura "1.2.0"]
+[com.taoensso/tempura "1.2.1"]
 ```
 
 > Please consider helping to [support my continued open-source Clojure/Script work]? 
@@ -34,7 +34,7 @@
 Add the necessary dependency to your project:
 
 ```clojure
-[com.taoensso/tempura "1.2.0"]
+[com.taoensso/tempura "1.2.1"]
 ```
 
 Setup your namespace imports:
