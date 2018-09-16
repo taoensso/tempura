@@ -8,6 +8,10 @@
 
 (comment (test/run-tests))
 
+;;;; TODO
+;; - Would be nice to support args in Hiccup attrs forms, ala
+;;   [[:span {:title "%1"} "Foo %2"]], Ref. https://github.com/ptaoussanis/tempura/issues/22
+
 (defn str->?arg-idx [s]
   (case s
     ;; % 0 ; No, prefer minimizing alternatives + allows % literal pass through
@@ -183,6 +187,31 @@
            ((vec->vargs-fn ["hi" {:attr "foo %1"}]) ["a1"])))))
 
 ;;;;
+
+(defn attrs-explode-args-in-strs [v] ; TODO Non-recursive
+  (have? vector? v)
+  (let [[v1 ?attrs] v]
+    (if-not (map? ?attrs)
+      v
+      (let [attrs
+            (enc/map-vals
+              (fn [v]
+                (if (string? v)
+                  (let [parts (str->split-args v)]
+                    (if (> (count parts) 1)
+                      parts
+                      v))
+                  v))
+              ?attrs)]
+        ;; TODO Could immediately make this a vargs fn?
+        (if (= attrs ?attrs)
+          v
+          (assoc v 1 attrs))))))
+
+(comment
+  (attrs-explode-args-in-strs [:a     {:foo "hi"    :bar "baz"} "hello"])
+  (attrs-explode-args-in-strs [:a     {:foo "hi %1" :bar "baz"} "hello"])
+  (attrs-explode-args-in-strs [:a [:b {:foo "hi %1" :bar "baz"} "hello"]]))
 
 (defn vec-explode-args-in-strs [v]
   (have? vector? v)
