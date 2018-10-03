@@ -37,9 +37,8 @@
         [(enc/str-replace s uuid-esc "%")]
         (let [arg-idxs (mapv str->?arg-idx ?arg-seq)
               splits   (str/split s re-clojure-arg)
-              splits   (mapv (fn [s] (enc/str-replace s uuid-esc "%")) splits)
-              _        (have (fn [arg-idxs-count splits-count]
-                               (= arg-idxs-count (- splits-count 1))))]
+              splits   (mapv (fn [s] (enc/str-replace s uuid-esc "%")) splits)]
+
           (enc/vinterleave-all splits arg-idxs))))))
 
 (comment
@@ -220,7 +219,7 @@
       (if-not (string? in)
         (conj acc in)
         (let [parts (str->split-args in)
-              parts (mapv (fn [p] (if (string? p) p (symbol (str "%" (inc p)))))
+              parts (mapv (fn [p] (if (string? p) p (symbol (str "%" (inc (long p))))))
                       parts)]
           (into acc parts))))
     v))
