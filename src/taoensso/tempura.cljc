@@ -345,7 +345,7 @@
      [header]
      (when header
        (when-let [csvs (not-empty (str/split header #","))]
-         (let [idx_ (volatile! -1)
+         (let [idx_ (enc/counter)
                m-sort-by
                (reduce
                  (fn [acc in]
@@ -354,11 +354,12 @@
                        acc
                        (let [[choice q] (str/split in #";")
                              choice (str/trim choice)
-                             q (or (when q
-                                     (enc/as-?float
-                                       (get (str/split q #"=") 1)))
-                                 1.0)
-                             sort-by [(- q) (vswap! idx_ inc)]]
+                             ^double q
+                             (or (when q
+                                   (enc/as-?float
+                                     (get (str/split q #"=") 1)))
+                               1.0)
+                             sort-by [(- q) (idx_)]]
                          (assoc acc [choice q] sort-by)))))
                  {}
                  csvs)]
