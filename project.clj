@@ -12,7 +12,7 @@
 
   :dependencies
   [[org.clojure/clojure "1.7.0"]
-   [com.taoensso/encore "2.94.0"]]
+   [com.taoensso/encore "2.100.0"]]
 
   :plugins
   [[lein-pprint    "1.2.0"]
@@ -26,7 +26,7 @@
    :1.8      {:dependencies [[org.clojure/clojure "1.8.0"]]}
    :1.9      {:dependencies [[org.clojure/clojure "1.9.0"]]}
    :test     {:dependencies [[org.clojure/test.check "0.9.0"]]}
-   :provided {:dependencies [[org.clojure/clojurescript "1.10.145"]]}
+   :provided {:dependencies [[org.clojure/clojurescript "1.10.339"]]}
    :dev [:1.9 :test :server-jvm]}
 
   :cljsbuild
