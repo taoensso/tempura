@@ -29,98 +29,226 @@
  * All-Clojure **(edn) dictionary format** for ease of use, easy compile-**and-runtime** manipulation, etc.
  * Focus only on common-case **translation** and no other aspects of i18n/L10n.
 
-## Quickstart
+## Tutorial
 
 Add the necessary dependency to your project:
-
 ```clojure
 [com.taoensso/tempura "1.2.1"]
 ```
-
-Setup your namespace imports:
-
+The following walk-through assumes that you are using a REPL and have
+required tempura as follows:
 ```clojure
 (def my-clj-or-cljs-ns
   (:require [taoensso.tempura :as tempura :refer [tr]]))
 ```
 
-Define a dictionary for translation resources:
+### Getting started
 
+It's best practice to define a Clojure map for localizable
+resources. At the top-level the keys refer to the language and the
+values are further maps with translation keys and the corresponding
+localizations in the given language -- the following example offers a
+map with localizations in English, German and Chinese:
 ```clojure
-(def my-tempura-dictionary
-  {:en-GB ; Locale
-   {:missing ":en-GB missing text" ; Fallback for missing resources
-    :example ; You can nest ids if you like
-    {:greet "Good day %1!" ; Note Clojure fn-style %1 args
-     }}
+(def translations
+  {; English language resources
+   :en {:missing       "**MISSING**" ; Fallback for missing resources
+        :hello-world   "Hello, world!"
+        :hello-tempura "Hello tempura!"}
 
-   :en ; A second locale
-   {:missing ":en missing text"
-    :example
-    {:greet "Hello %1"
-     :farewell "Goodbye %1"
-     :foo "foo"
-     :bar "bar"
-     :bar-copy :en.example/bar ; Can alias entries
-     :baz [:div "This is a **Hiccup** form"]
+   ; German language resources
+   :de {:missing "**FEHLT**"
+        :hello-world "Hallo Welt!"
+        :hello-tempura "Hallo tempura!"}
+   ; Chinese language resources
+   :zh {:missing "**失踪**"
+        :hello-world "世界，你好"}})
+```
+Using the translations is straightforward -- using the function call
+`tr` the correct localization is given via
+```clojure
+(tr {:dict translations} [:en] [:hello-world])
+```
+which returns the English translation `Hello, world!`. The first
+parameter of `tr` contains the options (where the `:dict` is mandatory
+to supply the map with translations), the second is a vector of
+languages and the third is a vector with the translation key.
 
-     ;; Can use arbitrary fns as resources
-     :qux (fn [[arg1 arg2]] (str arg1 " and " arg2))}
+Likewise, the Chinese translation is recovered via
+```clojure
+(tr {:dict translations} [:zh] [:hello-world])
+```
+which correctly returns `世界，你好`.
 
-    :example-copy :en/example ; Can alias entire subtrees
+### Handle missing keys
 
-    :import-example
-    {:__load-resource ; Inline edn content loaded from disk/resource
-     "resources/i18n.clj"}}})
+In the above example the key `:hello-tempura` was missing from the
+Chinese map. Missing resources (and also misspelled resource keys) are
+the reason why both the languages as well as the translation keys are
+vectors and not merely simple elements. If a resource is missing then
+first the vector of supplied languages is searched (until the resource
+is found in a different language) and then the vector of translation
+keys is searched. The former allows to display strings in a "fallback"
+language like English, the latter allows to mark resources as missing
+by using the `:missing` key as a marker.
+
+Thus, the call
+```clojure
+(tr {:dict translations} [lang :en] [res-key :missing])
+```
+will
+1. search for the key `res-key` in language `lang` in the
+   `translations` map.
+2. If it fails to find one, it will look up the key in the `:en`
+   English language.
+3. If it still fails to find that one, it displays the value of
+   `:missing` in the `lang` language map.
+
+It is a best practice to use a convenience function that encapsulates
+this default behavior, e.g.
+```clojure
+(defn app-tr
+  "Get a localized resource.
+
+  @param resource Resource keyword.
+  @param params   Optional positional parameters.
+
+  @return translation of `resource` in active user language or a placeholder."
+  [resource & params]
+  (let [lang :zh] ; Retrieve user language from database or other source
+    (tr {:dict translations} [lang :en] [resource] (vec params))))
+```
+Then the function `app-tr` returns the localization with the above
+fallback behavior in case it could not be translated properly:
+```clojure
+(app-tr :hello-world)   ; => "世界，你好"
+(app-tr :hello-tempura) ; => "Hello tempura!"
+(app-tr :haha)          ; => "**失踪**"
 ```
 
-And we're ready to go:
+### Advanced scenarios
 
+The above example covered the most important basic functionality. The
+following are more advanced use cases. In particular, the
+functionality covered is:
+* using [Reagent](https://reagent-project.github.io)/Hiccup-style vectors,
+* using Java-style positional parameters,
+* deeper-level nesting of maps,
+* escaping special HTML entities,
+* custom functions for translations,
+* aliasing subtrees,
+* loading EDN content from disk or other external sources, and
+* using plain text instead of keywords.
+
+The following map illustrates these advanced scenarios:
 ```clojure
-(tr ; Just a functional call
-  {:dict my-tempura-dictionary} ; Opts map, see docstring for details
-  [:en-GB :fr] ; Vector of descending-preference locales to search
-  [:example/foo] ; Vector of descending-preference resource-ids to search
-  ) ; => "foo"
+(def translations
+  {; British English
+   :en-GB {:missing "**EN-GB/MISSING**"
 
-(def opts {:dict my-tempura-dictionary})
-(def tr (partial tr opts [:en])) ; You'll typically use a partial like this
+           ; Example of a Hiccup-form (e.g., for Clojurescript/Reagent)
+           :faq-link [:span "Got lost? See our " [:a {:href "/faq/index.html"} "FAQ"]]
 
-;; Grab a resource
-(tr [:example/foo]) ; => "foo"
+           ; Example of a Hiccup-form with Markdown
+           :markdown-text [:span "This is **bold** text"]
 
-;; Missing resource
-(tr [:example/invalid])                       ; => ":en missing text"
-(tr [:example/invalid "inline-fallback"])     ; => "inline-fallback"
-(tr [:example/invalid :bar "final-fallback"]) ; => "bar"
+           ; Alternative form of previous example (`[x]` is short-hand for `[:span x]`)
+           :markdown-text-alt ["This is **bold** text"]
 
-;; Let's try some argument interpolation
-(tr [:example/greet] ["Steve"]) ; => "Hello Steve"
+           ; You can use Java-style positional parameters
+           :greet-user "Good morning, %1. You're looking %2 today."
 
-;; With inline fallback
-(tr [:example/invalid "Hi %1"] ["Steve"]) ; => "Hi Steve"
+           ; You can nest ids if you like
+           :mood {:bad {:terrible "terrible"
+                        :horrible "horrible"}
+                  :good {:well "well"}}
 
-;; Example of a deeply-nested resource id
-(tr [:example.buttons/login-button "Login!"]) ; => "Login!"
+           ; HTML entities can be escaped by prefixing the % with a back-tick
+           :mail-support "mailto:support@tempura.com?subject=Help`%20with`%20tempura"
 
-;; Let's get a Hiccup form for Reactjs, etc.
-;; Note how the Markdown gets expanded into appropriate Hiccup forms:
-(tr [:example/baz]) ; => [:div "This is a " [:strong "Hiccup"] " form"]
+           ; A translation can also be a custom function
+           :little-ducks (fn [[count]]
+                           (let [count-word (if (< count 6)
+                                              (nth ["No" "One" "Two" "Three" "Four" "Five"] count)
+                                              (str count))]
+                             (str count-word " little ducks")))}
 
-;; With inline fallback
-(tr [:example/invalid [:div "My **fallback** div"]]) ; => [:div "My " [:strong "fallback"] " div"]
+  ; Regular English
+  :en {:missing "**EN/MISSING**"
+
+       ; Copy an entire subtree
+       :mood-copy :en-GB/mood
+
+       ; Import a resource as EDN content from idisk (it MUST actually exist!)
+       ; :imported {:__load-resource "resources/i18n.clj"}
+       }})
+```
+The following are usage examples of the functionality illustrated
+above:
+```clojure
+(def en-gb-tr (partial tr {:dict translations} [:en-gb]))
+
+(en-gb-tr [:haha])          ; => "**EN-GB/MISSING**"
+
+(en-gb-tr [:faq-link])      ; => [:span "Got lost? See our " [:a {:href "/faq/index.html"} "FAQ"]]
+(en-gb-tr [:markdown-text]) ; => [:span "This is " [:strong "bold"] " text"]
+(en-gb-tr [:markdown-text-alt]) ; [:span "This is " [:strong "bold"] " text"]
+
+(en-gb-tr [:mood.bad/horrible]) ; => "horrible"
+(en-gb-tr [:greet-user] ["Dave" (en-gb-tr [:mood.good/well])]) ; => "Good morning, Dave. You're looking well today."
+
+(en-gb-tr [:mail-support])  ; => "mailto:support@tempura.com?subject=Help%20with%20tempura"
+
+(en-gb-tr [:little-ducks] [0]) ; => "No little ducks"
+(en-gb-tr [:little-ducks] [4]) ; => "Four little ducks"
+(en-gb-tr [:little-ducks] [6]) ; => "6 little ducks"
+
+(tr {:dict translations} [:en] [:mood-copy.bad/terrible]) ; => "terrible"
+```
+If the translation key is not a keyword but a string it is simply
+returned verbatim, i.e.,
+```clojure
+(en-gb-tr ["Work in progress"]) ; => "Work in progress"
+```
+For further options extensive inline documentation is available via
+```clojure
+(doc tr)
 ```
 
-And that's it, you know the [API]:
+### Handling of Hiccup-syntax
 
+Note that you CAN use positional parameters in a Hiccup-vector. But you CANNOT use them
+in a map, i.e.,
 ```clojure
-(tr [opts locales resource-ids])               ; Without argument interpolation, or
-(tr [opts locales resource-ids resource-args]) ; With    argument interpolation
+(def translations
+  {:en {:link-tag [:a {:href "%2"} "%1"]}})
+```
+will replace the first positional parameter `%1`, but NOT the second at `%2`. If you
+need to use positional parameter at that point you must use a function, e.g.,
+```clojure
+(def translations
+  {:en {:link-faq (fn [[link]]
+                    ["Please see the " [:a {:href link} "FAQs"]])}
+   :de {:link-faq (fn [[link]]
+                    ["Schauen Sie sich die " [:a {:href link} "häufigen Fragen"] " an"])}})
+```
+This will return the correctly localized Reagent components with the link properly injected:
+```clojure
+(tr {:dict translations} [:en] [:link-faq] ["https://tempura.com/faq"])
+  ; => ["Please see the " [:a {:href "https://tempura.com/faq"} "FAQs"]]
+(tr {:dict translations} [:de] [:link-faq] ["https://tempura.com/faq"])
+  ; => ["Schauen Sie sich die " [:a {:href "https://tempura.com/faq"} "häufigen Fragen"] " an"]
 ```
 
-Please see the `tr` docstring for more info on available opts, etc.
+### Running tests
 
-## Pattern: adding translations in stages
+Tests are supplied inline with the main source code. Test cases in
+Clojure are run via
+```bash
+lein test
+```
+
+### Pattern: Adding translations in stages
 
 The support for `gettext`-like **inline fallback content** makes it really easy to write your application in stages, **without** translations becoming a burden until if/when you need them.
 
