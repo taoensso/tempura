@@ -231,8 +231,10 @@
         s (replace-matches s   #"(\*)([^\*\r\n]+)\1" :em)
         s (replace-matches s    #"(_)([^_\r\n]+)\1"  :i)
 
-        ;; This common enough to be worthwhile?
-        s (replace-matches s   #"(~~)([^~\r\n]+)\1"  :s) ; Strikeout
+        ;;; Specials (for arbitrary inline styling, etc.)
+        s (replace-matches s   #"(~~)([^~\r\n]+)\1"  :mark)
+        s (replace-matches s  #"(~1~)([^~\r\n]+)\1"  :span.tspecl1)
+        s (replace-matches s  #"(~2~)([^~\r\n]+)\1"  :span.tspecl2)
 
         s (enc/str-replace s uuid-esc*      "*")
         s (enc/str-replace s uuid-esc_      "_")
@@ -247,7 +249,7 @@
             splits (str/split s (re-pattern (str/join "|" ordered-match-ks)))]
         (enc/vinterleave-all splits ordered-match-vs)))))
 
-(comment (str->split-styles "_hello_ **there** this is a _test_ `*yo`*"))
+(comment (str->split-styles "_hello_ **there** this is a _test_ `*yo`* ~1~hello~1~"))
 
 (defn vec->vtag
   "[\"foo\"] -> [:span \"foo\"] as a convenience."
