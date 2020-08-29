@@ -11,8 +11,7 @@
                 *assert*             true}
 
   :dependencies
-  [[org.clojure/clojure "1.7.0"]
-   [com.taoensso/encore "2.118.0"]]
+  [[com.taoensso/encore "2.118.0"]]
 
   :plugins
   [[lein-pprint    "1.2.0"]
@@ -23,12 +22,14 @@
   :profiles
   {;; :default [:base :system :user :provided :dev]
    :server-jvm {:jvm-opts ^:replace ["-server"]}
+   :provided {:dependencies [[org.clojure/clojure       "1.7.0"]
+                             [org.clojure/clojurescript "1.10.597"]]}
    :1.8      {:dependencies [[org.clojure/clojure "1.8.0"]]}
    :1.9      {:dependencies [[org.clojure/clojure "1.9.0"]]}
    :1.10     {:dependencies [[org.clojure/clojure "1.10.1"]]}
    :test     {:dependencies [[org.clojure/test.check "0.10.0"]]}
-   :provided {:dependencies [[org.clojure/clojurescript "1.10.597"]]}
-   :dev [:1.9 :test :server-jvm]}
+   :depr     {:jvm-opts ["-Dtaoensso.elide-deprecated=true"]}
+   :dev      [:1.9 :test :server-jvm :depr]}
 
   :cljsbuild
   {:test-commands
@@ -52,4 +53,5 @@
    "start-dev"  ["with-profile" "+dev" "repl" ":headless"]}
 
   :repositories
-  {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"})
+  {"sonatype-oss-public"
+   "https://oss.sonatype.org/content/groups/public/"})
