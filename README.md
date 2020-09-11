@@ -7,15 +7,9 @@
 [com.taoensso/tempura "1.2.1"]
 ```
 
-> Please consider helping to [support my continued open-source Clojure/Script work]? 
-> 
-> Even small contributions can add up + make a big difference to help sustain my time writing, maintaining, and supporting Tempura and other Clojure/Script libraries. **Thank you!**
->
-> \- Peter Taoussanis
+> See [here](https://taoensso.com/clojure/backers) if you're interested in helping support my open-source work, thanks! - Peter Taoussanis
 
-# Tempura
-
-### Pure Clojure/Script i18n translations library
+# Tempura: a pure Clojure/Script i18n translations library
 
 ## Objectives
 
@@ -34,7 +28,8 @@
 Add the necessary dependency to your project:
 
 ```clojure
-[com.taoensso/tempura "1.2.1"]
+Leiningen: [com.taoensso/tempura "1.2.1"] ; or
+deps.edn:   com.taoensso/tempura {:mvn/version "1.2.1"}
 ```
 
 Setup your namespace imports:
@@ -167,7 +162,7 @@ As an example:
 ```clojure
 `(tr [["Hi %1, please enter your **login details** below:"]] [user-name])`
 
-;; Will compiled the inner resource to an optimized function like this:
+;; Will compile the inner resource to an optimized function like this:
 
 (fn [user-name] [:span "Hi " user-name ", please enter your " [:strong "login details"] " below:"])
 ```
@@ -205,7 +200,7 @@ Otherwise, you can reach me at [Taoensso.com]. Happy hacking!
 ## License
 
 Distributed under the [EPL v1.0] \(same as Clojure).  
-Copyright &copy; 2020 [Peter Taoussanis].
+Copyright &copy; 2016-2022 [Peter Taoussanis].
 
 <!--- Standard links -->
 [Taoensso.com]: https://www.taoensso.com
@@ -213,7 +208,6 @@ Copyright &copy; 2020 [Peter Taoussanis].
 [@ptaoussanis]: https://www.taoensso.com
 [More by @ptaoussanis]: https://www.taoensso.com
 [Break Version]: https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md
-[support my continued open-source Clojure/Script work]: http://taoensso.com/clojure/backers
 
 <!--- Standard links (repo specific) -->
 [CHANGELOG]: https://github.com/ptaoussanis/tempura/releases
