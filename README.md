@@ -7,11 +7,7 @@
 [com.taoensso/tempura "1.2.1"]
 ```
 
-> Please consider helping to [support my continued open-source Clojure/Script work]? 
-> 
-> Even small contributions can add up + make a big difference to help sustain my time writing, maintaining, and supporting Tempura and other Clojure/Script libraries. **Thank you!**
->
-> \- Peter Taoussanis
+> See [here](https://taoensso.com/clojure/backers) if you're interested in helping support my open-source work, thanks! - Peter Taoussanis
 
 # Tempura
 
@@ -205,7 +201,7 @@ Otherwise, you can reach me at [Taoensso.com]. Happy hacking!
 ## License
 
 Distributed under the [EPL v1.0] \(same as Clojure).  
-Copyright &copy; 2020 [Peter Taoussanis].
+Copyright &copy; 2016-2020 [Peter Taoussanis].
 
 <!--- Standard links -->
 [Taoensso.com]: https://www.taoensso.com
@@ -213,7 +209,6 @@ Copyright &copy; 2020 [Peter Taoussanis].
 [@ptaoussanis]: https://www.taoensso.com
 [More by @ptaoussanis]: https://www.taoensso.com
 [Break Version]: https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md
-[support my continued open-source Clojure/Script work]: http://taoensso.com/clojure/backers
 
 <!--- Standard links (repo specific) -->
 [CHANGELOG]: https://github.com/ptaoussanis/tempura/releases
