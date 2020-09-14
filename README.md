@@ -163,7 +163,7 @@ As an example:
 ```clojure
 `(tr [["Hi %1, please enter your **login details** below:"]] [user-name])`
 
-;; Will compiled the inner resource to an optimized function like this:
+;; Will compile the inner resource to an optimized function like this:
 
 (fn [user-name] [:span "Hi " user-name ", please enter your " [:strong "login details"] " below:"])
 ```
