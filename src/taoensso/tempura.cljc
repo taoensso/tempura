@@ -27,8 +27,9 @@
 
 ;;;;
 
-(def ^:private get-default-resource-compiler
-  "Good general-purpose resource compiler.
+(def get-default-resource-compiler
+  "Implementation detail.
+  Good general-purpose resource compiler.
   Supports output of text, and Hiccup forms with simple Markdown styles."
   (enc/memoize_
     (fn [{:keys [escape-html?]}]
