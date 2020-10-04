@@ -9,9 +9,7 @@
 
 > See [here](https://taoensso.com/clojure/backers) if you're interested in helping support my open-source work, thanks! - Peter Taoussanis
 
-# Tempura
-
-### Pure Clojure/Script i18n translations library
+# Tempura: a pure Clojure/Script i18n translations library
 
 ## Objectives
 
@@ -30,7 +28,8 @@
 Add the necessary dependency to your project:
 
 ```clojure
-[com.taoensso/tempura "1.2.1"]
+Leiningen: [com.taoensso/tempura "1.2.1"] ; or
+deps.edn:   com.taoensso/tempura {:mvn/version "1.2.1"}
 ```
 
 Setup your namespace imports:
