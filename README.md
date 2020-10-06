@@ -23,6 +23,10 @@
  * All-Clojure **(edn) dictionary format** for ease of use, easy compile-**and-runtime** manipulation, etc.
  * Focus only on common-case **translation** and no other aspects of i18n/L10n.
 
+## Tutorial
+
+See [here][tutorial] for a detailed tutorial by [Dr. Wolfram Schroers][@field-theory] (thanks Wolfram!).
+
 ## Quickstart
 
 Add the necessary dependency to your project:
@@ -220,3 +224,5 @@ Copyright &copy; 2016-2022 [Peter Taoussanis].
 <!--- Unique links -->
 [gettext]: https://en.wikipedia.org/wiki/Gettext
 [Reagent]: https://github.com/reagent-project/reagent
+[tutorial]: https://gist.github.com/field-theory/b7c05953e32645d880eae382171a85d7
+[@field-theory]: https://github.com/field-theory
