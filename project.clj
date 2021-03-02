@@ -11,7 +11,7 @@
                 *assert*             true}
 
   :dependencies
-  [[com.taoensso/encore "2.118.0"]]
+  [[com.taoensso/encore "3.9.2"]]
 
   :plugins
   [[lein-pprint    "1.2.0"]
