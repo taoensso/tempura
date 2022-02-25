@@ -11,23 +11,24 @@
                 *assert*             true}
 
   :dependencies
-  [[com.taoensso/encore "2.118.0"]]
+  [[com.taoensso/encore "3.22.0"]]
 
   :plugins
-  [[lein-pprint    "1.2.0"]
-   [lein-ancient   "0.6.15"]
-   [lein-codox     "0.10.7"]
-   [lein-cljsbuild "1.1.7"]]
+  [[lein-pprint    "1.3.2"]
+   [lein-ancient   "0.7.0"]
+   [lein-codox     "0.10.8"]
+   [lein-cljsbuild "1.1.8"]]
 
   :profiles
   {;; :default [:base :system :user :provided :dev]
    :server-jvm {:jvm-opts ^:replace ["-server"]}
    :provided {:dependencies [[org.clojure/clojure       "1.7.0"]
-                             [org.clojure/clojurescript "1.10.597"]]}
+                             [org.clojure/clojurescript "1.11.4"]]}
    :1.8      {:dependencies [[org.clojure/clojure "1.8.0"]]}
    :1.9      {:dependencies [[org.clojure/clojure "1.9.0"]]}
-   :1.10     {:dependencies [[org.clojure/clojure "1.10.1"]]}
-   :test     {:dependencies [[org.clojure/test.check "0.10.0"]]}
+   :1.10     {:dependencies [[org.clojure/clojure "1.10.3"]]}
+   :1.11     {:dependencies [[org.clojure/clojure "1.11.1"]]}
+   :test     {:dependencies [[org.clojure/test.check "1.1.1"]]}
    :depr     {:jvm-opts ["-Dtaoensso.elide-deprecated=true"]}
    :dev      [:1.9 :test :server-jvm :depr]}
 
