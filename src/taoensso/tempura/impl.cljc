@@ -53,7 +53,7 @@
    (have? string? s)
    (let [parts (str->split-args s)
          ;; Why the undefined check? Vestigial?
-         argval-fn (or argval-fn #?(:clj identity :cljs enc/undefined->nil))]
+         argval-fn (or argval-fn #?(:clj identity :cljs #(if (undefined? %) nil %)))]
 
      (if (= (count parts) 1) ; Optimize common-case:
        (let [[p1] parts]
@@ -405,7 +405,7 @@
               {} (node-paths map? dict))))
 
         compile-dictionary*
-        (enc/memoize* 1000 ; Minor caching to help blunt impact on dev benchmarks
+        (enc/memoize 1000 ; Minor caching to help blunt impact on dev benchmarks
           (fn [dict] (-> dict preprocess preprocess as-paths)))
 
         compile-dictionary*-cached (enc/memoize_ compile-dictionary*)]
