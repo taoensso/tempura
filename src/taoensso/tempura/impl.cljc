@@ -405,7 +405,7 @@
               {} (node-paths map? dict))))
 
         compile-dictionary*
-        (enc/memoize* 1000 ; Minor caching to help blunt impact on dev benchmarks
+        (enc/memoize 1000 ; Minor caching to help blunt impact on dev benchmarks
           (fn [dict] (-> dict preprocess preprocess as-paths)))
 
         compile-dictionary*-cached (enc/memoize_ compile-dictionary*)]
