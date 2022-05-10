@@ -23,6 +23,51 @@
  * All-Clojure **(edn) dictionary format** for ease of use, easy compile-**and-runtime** manipulation, etc.
  * Focus only on common-case **translation** and no other aspects of i18n/L10n.
 
+## 10-second example
+
+```clojure
+(require '[taoensso.tempura :as tempura :refer [tr]]))
+
+(tr ; For "translate"
+    {:dict ; Dictionary of translations
+     {:sw {:missing "sw/?" :r1 "sw/r1" :r2 "sw/r2"}
+      :en {:missing "en/?" :r1 "en/r1" :r2 "en/r2"}}}
+
+    [:sw :en <...>] ; Locales   (desc priority)
+    [:r1 :r2 <...>  ; Resources (desc priority)
+     <?fallback-str> ; Optional final fallback string
+     ])
+
+;; =>
+
+(or
+  sw/r1 sw/r2  <...> ; Descending-priority resources in priority-1 locale
+  en/r1 en/r2  <...> ; ''                            in priority-2 locale
+  <...>
+
+  ?fallback-str ; Optional fallback string (as last element in resources vec)
+
+  sw/? ; Missing (error) resource in priority-1 locale
+  en/? ; ''                          priority-2 locale
+
+  nil  ; If none of the above exist
+  )
+
+;; etc.
+
+;; Note that ?fallback-str is super handy for development before you
+;; have translations ready, e.g.:
+
+(tr {:dict {}} [:en] [:sign-in-btn "Sign in here!"])
+;; => "Sign in here!"
+
+;; Tempura also supports Hiccup with Markdown-like styles, e.g.:
+
+(tr {:dict {}} [:en] [:sign-in-btn ["**Sign in** here!"]])
+;; => [:span [:strong "Sign in"] " here!"]
+
+```
+
 ## Tutorial
 
 See [here][tutorial] for a detailed tutorial by [Dr. Wolfram Schroers][@field-theory] (thanks Wolfram!).
