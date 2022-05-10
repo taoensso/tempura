@@ -339,7 +339,7 @@
   ;; an appropriately prepared input for this fn.
 
   (let [expand-locale
-        (enc/memoize_
+        (enc/fmemoize
           (fn [locale]
             (let [parts (str/split (str/lower-case (name locale)) #"[_-]")]
               (mapv #(keyword (str/join "-" %))
@@ -361,7 +361,7 @@
                     locales)]
               acc)))
 
-        expand-locales*-cached (enc/memoize_ expand-locales*)]
+        expand-locales*-cached (enc/fmemoize expand-locales*)]
 
     ;; Inputs are combinatorial, so can't cache by default:
     (fn [cache? locales]
@@ -383,7 +383,7 @@
      (is (= [[:en-us :en] [:fr-fr :fr]]    ; Never change langs before vars
            (expand-locales nil [:en-us :fr-fr :en])))))
 
-#?(:clj (def ^:private cached-read-edn (enc/memoize_ enc/read-edn)))
+#?(:clj (def ^:private cached-read-edn (enc/fmemoize enc/read-edn)))
 (defn load-resource [rname]
   #?(:clj
      (if-let [edn (enc/slurp-file-resource rname)]
@@ -424,7 +424,7 @@
             {} dict))
 
         as-paths ; For locale normalization, lookup speed, etc.
-        (enc/memoize_ ; Ref transparent
+        (enc/fmemoize ; Ref transparent
           (fn [dict]
             (reduce
               (fn [acc in]
@@ -438,7 +438,7 @@
         (enc/memoize 1000 ; Minor caching to help blunt impact on dev benchmarks
           (fn [dict] (-> dict preprocess preprocess as-paths)))
 
-        compile-dictionary*-cached (enc/memoize_ compile-dictionary*)]
+        compile-dictionary*-cached (enc/fmemoize compile-dictionary*)]
 
     ;; We may want resource reloads in dev-mode, so can't cache by default:
     (fn [cache? dict]

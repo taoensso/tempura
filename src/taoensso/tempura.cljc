@@ -31,12 +31,12 @@
   "Implementation detail.
   Good general-purpose resource compiler.
   Supports output of text, and Hiccup forms with simple Markdown styles."
-  (enc/memoize_
+  (enc/fmemoize
     (fn [{:keys [escape-html?]}]
       (let [esc1 (if escape-html? impl/escape-html             identity)
             esc2 (if escape-html? impl/vec-escape-html-in-strs identity)]
 
-        (enc/memoize_
+        (enc/fmemoize
           (fn [res] ; -> [(fn [vargs]) -> <compiled-resource>]
             (enc/cond! ; Nb no keywords, nils, etc.
               (fn?     res) (-> res) ; Completely arb, full control
@@ -118,12 +118,12 @@
 ;;;;
 
 (def ^:private merge-into-default-opts
-  (enc/memoize_
+  (enc/fmemoize
     (fn [opts dynamic-opts]
       (merge default-tr-opts opts dynamic-opts))))
 
 (def ^:private scoped
-  (enc/memoize_
+  (enc/fmemoize
     (fn [locale ?scope resid]
       (enc/merge-keywords [locale ?scope resid]))))
 
@@ -148,7 +148,7 @@
         acc resids))
     nil locale-splits))
 
-(def ^:private search-resids*-cached (enc/memoize_ search-resids*))
+(def ^:private search-resids*-cached (enc/fmemoize search-resids*))
 
 (defn- search-resids [cache? dict locale-splits ?scope resids]
   (if cache?
