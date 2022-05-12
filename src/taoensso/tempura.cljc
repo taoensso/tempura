@@ -13,7 +13,7 @@
       [taoensso.encore       :as enc  :refer-macros [have have?]]
       [taoensso.tempura.impl :as impl :refer-macros []])))
 
-(enc/assert-min-encore-version [2 86 1])
+(enc/assert-min-encore-version [3 23 0])
 
 (def ^:dynamic *tr-opts*  nil)
 (def ^:dynamic *tr-scope* nil)
