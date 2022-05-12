@@ -1,5 +1,20 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
+## v1.3.0 - 2022 May 12
+
+```clojure
+[com.taoensso/tempura "1.3.0"] ; See CHANGELOG for details
+```
+
+> This is a minor maintenance release that should be non-breaking for the vast majority of users.
+
+* **BREAKING**: Now requires Clojure 1.7+
+* **BREAKING**: Markdown output no longer interprets ~~ as strikeout. (That syntax is now reserved).
+
+* [#26] **New**: Make `get-default-resource-compiler` public (@mt0erfztxt)
+* **Impl**: Some minor performance improvements
+
+
 ## v1.2.1 - 2018 Apr 15
 
 ```clojure

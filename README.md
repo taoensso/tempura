@@ -4,7 +4,7 @@
 **[CHANGELOG]** | [API] | current [Break Version]:
 
 ```clojure
-[com.taoensso/tempura "1.2.1"]
+[com.taoensso/tempura "1.3.0"]
 ```
 
 > See [here](https://taoensso.com/clojure/backers) if you're interested in helping support my open-source work, thanks! - Peter Taoussanis
@@ -77,8 +77,8 @@ See [here][tutorial] for a detailed tutorial by [Dr. Wolfram Schroers][@field-th
 Add the necessary dependency to your project:
 
 ```clojure
-Leiningen: [com.taoensso/tempura "1.2.1"] ; or
-deps.edn:   com.taoensso/tempura {:mvn/version "1.2.1"}
+Leiningen: [com.taoensso/tempura "1.3.0"] ; or
+deps.edn:   com.taoensso/tempura {:mvn/version "1.3.0"}
 ```
 
 Setup your namespace imports:
