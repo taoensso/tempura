@@ -32,7 +32,9 @@
   Good general-purpose resource compiler.
   Supports output of text, and Hiccup forms with simple Markdown styles."
   (enc/fmemoize
-    (fn [{:keys [escape-html?]}]
+    (fn [{:keys [default-tag escape-html?]
+          :or   {default-tag :span}}]
+
       (let [esc1 (if escape-html? impl/escape-html             identity)
             esc2 (if escape-html? impl/vec-escape-html-in-strs identity)]
 
@@ -42,10 +44,10 @@
               (fn?     res) (-> res) ; Completely arb, full control
               (string? res) (-> res esc1 impl/str->vargs-fn)
               (vector? res) (-> res
-                              impl/vec->vtag
+                              (impl/vec->vtag default-tag)
                               impl/vec-explode-styles-in-strs
                               impl/vec-explode-args-in-strs
-                              esc2       ; Avoid for Reactjs
+                              esc2 ; Avoid for Reactjs
                               impl/vec->vargs-fn))))))))
 
 (comment

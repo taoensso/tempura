@@ -277,12 +277,13 @@
 
 (defn vec->vtag
   "[\"foo\"] -> [:span \"foo\"] as a convenience."
-  [v]
-  (have? vector? v)
-  (let [[v1] v]
-    (if-not (keyword? v1)
-      (into [:span] v)
-      v)))
+  ([v            ] (vec->vtag v :span))
+  ([v default-tag]
+   (have? vector? v)
+   (let [[v1] v]
+     (if-not (keyword? v1)
+       (into [default-tag] v)
+       v))))
 
 (comment
   (vec->vtag [:div.special "foo"]) ; Allow control of tag type
