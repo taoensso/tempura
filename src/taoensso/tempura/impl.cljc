@@ -8,10 +8,6 @@
 
 (comment (test/run-tests))
 
-;;;; TODO
-;; - Would be nice to support args in Hiccup attrs forms, ala
-;;   [[:span {:title "%1"} "Foo %2"]], Ref. https://github.com/ptaoussanis/tempura/issues/22
-
 (defn str->?arg-idx [s]
   (case s
     ;; % 0 ; No, prefer minimizing alternatives + allows % literal pass through
