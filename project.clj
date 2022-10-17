@@ -11,7 +11,7 @@
                 *assert*             true}
 
   :dependencies
-  [[com.taoensso/encore "3.23.0"]]
+  [[com.taoensso/encore "3.26.0"]]
 
   :plugins
   [[lein-pprint    "1.3.2"]
@@ -23,7 +23,7 @@
   {;; :default [:base :system :user :provided :dev]
    :server-jvm {:jvm-opts ^:replace ["-server"]}
    :provided {:dependencies [[org.clojure/clojure       "1.7.0"]
-                             [org.clojure/clojurescript "1.11.4"]]}
+                             [org.clojure/clojurescript "1.11.60"]]}
    :1.8      {:dependencies [[org.clojure/clojure "1.8.0"]]}
    :1.9      {:dependencies [[org.clojure/clojure "1.9.0"]]}
    :1.10     {:dependencies [[org.clojure/clojure "1.10.3"]]}
