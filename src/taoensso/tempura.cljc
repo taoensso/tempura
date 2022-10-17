@@ -1,19 +1,15 @@
 (ns taoensso.tempura
   "Pure Clojure/Script i18n translations library."
   {:author "Peter Taoussanis (@ptaoussanis)"}
-  #?(:clj
-     (:require
-      [clojure.string        :as str]
-      [taoensso.encore       :as enc  :refer [have have? qb]]
-      [taoensso.tempura.impl :as impl :refer []]))
-
-  #?(:cljs
-     (:require
-      [clojure.string        :as str]
-      [taoensso.encore       :as enc  :refer-macros [have have?]]
-      [taoensso.tempura.impl :as impl :refer-macros []])))
+  (:require
+   [clojure.string :as str]
+   [clojure.test   :as test :refer [deftest is]]
+   [taoensso.encore       :as enc  :refer [have have? qb]]
+   [taoensso.tempura.impl :as impl :refer []]))
 
 (enc/assert-min-encore-version [3 23 0])
+
+(comment (test/run-tests))
 
 (def ^:dynamic *tr-opts*  nil)
 (def ^:dynamic *tr-scope* nil)
@@ -52,58 +48,64 @@
       (nth out 1)
       (do  out))))
 
-(comment (enc/qb 1e4 (compact [:span "a" "b" [:strong "c" "d"] "e" "f"])))
+(comment (enc/qb 1e4 (compact [:span "a" "b" [:strong "c" "d"] "e" "f"]))) ; 7.16
 
-(def get-default-resource-compiler
+(defn get-default-resource-compiler
   "Implementation detail.
   Good general-purpose resource compiler.
   Supports output of text, and Hiccup forms with simple Markdown styles."
-  (enc/fmemoize
-    (fn [{:keys [default-tag escape-html? experimental/compact-vectors?]
-          :or   {default-tag :span}}]
+  [{:keys [default-tag escape-html? experimental/compact-vectors?]
+    :or   {default-tag :span}}]
 
-      (let [?esc1    (if escape-html?     impl/escape-html             identity)
-            ?esc2    (if escape-html?     impl/vec-escape-html-in-strs identity)
-            ?compact (if compact-vectors? (fn [f] (comp compact f))    identity)]
+  (let [?esc1    (if escape-html?     impl/escape-html             identity)
+        ?esc2    (if escape-html?     impl/vec-escape-html-in-strs identity)
+        ?compact (if compact-vectors? (fn [f] (comp compact f))    identity)]
 
-        (enc/fmemoize
-          (fn [res] ; -> [(fn [vargs]) -> <compiled-resource>]
-            (enc/cond! ; Nb no keywords, nils, etc.
-              (fn?     res) (-> res) ; Completely arb, full control
-              (string? res) (-> res ?esc1 impl/str->vargs-fn)
-              (vector? res)
-              (?compact ; [:span "foo" "bar"] -> "foobar", etc.
-                (-> res
-                  (impl/vec->vtag default-tag)
-                  impl/vec-explode-styles-in-strs
-                  impl/vec-explode-args-in-strs
-                  ?esc2              ; Avoid for Reactjs
-                  impl/vec->vargs-fn ; (fn [args]) -> result
-                  )))))))))
+    (enc/fmemoize ; Ref. transparent, limited domain
+      (fn [res] ; (fn [vargs]) -> <compiled-resource>
+        (enc/cond! ; Nb no keywords, nils, etc.
+          (fn?     res) (-> res) ; Completely arb, full control
+          (string? res) (-> res ?esc1 impl/str->vargs-fn)
+          (vector? res)
+          (?compact ; [:span "foo" "bar"] -> "foobar", etc.
+            (-> res
+              (impl/vec->vtag default-tag)
+              impl/vec-explode-styles-in-strs
+              impl/vec-explode-args-in-strs
+              ?esc2              ; Avoid for Reactjs
+              impl/vec->vargs-fn ; (fn [args]) -> result
+              )))))))
 
-(comment
+(deftest _get-default-resource-compiler
   (let [rc (get-default-resource-compiler
              {:experimental/compact-vectors? #_false true})]
 
-    [((rc "Hi %1 :-)")           ["Steve"])
-     ((rc "Hi **%1** :-)")       ["Steve"])
-     ((rc ["a **b %1 c** d %2"]) [1 2])
-     ((rc ["a" "b"])             [])]))
+    [(is (= ((rc "Hi %1 :-)")     ["Steve"])   "Hi Steve :-)"))
+     (is (= ((rc "Hi **%1** :-)") ["Steve"])   "Hi **Steve** :-)"))
+     (is (= ((rc ["a **b %1 c** d %2"]) [1 2]) [:span "a " [:strong "b 1 c"] " d 2"]))
+     (is (= ((rc ["a" "b"]) [])               "ab"))]))
 
 (def default-tr-opts
   {:default-locale :en
    :dict {:en {:missing "[Missing tr resource]"}}
    :scope-fn (fn [] *tr-scope*)
 
-   :cache-dict?      #?(:clj false :cljs true)
-   :cache-locales?   #?(:clj false :cljs true)
-   :cache-resources? false
+   :cache-dict?      #?(:clj false :cljs :global)
+   :cache-locales?   #?(:clj false :cljs :global)
+   :cache-resources?         false
 
    :resource-compiler (get-default-resource-compiler {:escape-html? false})
    :missing-resource-fn nil ; Nb return nnil to use as resource
    #_(fn [{:keys [opts locales resource-ids resource-args]}]
        (debugf "Missing tr resource: %s" [locales resource-ids])
        nil)})
+
+(def ^:private merge-into-default-opts
+  (enc/fmemoize
+    (fn [opts dynamic-opts]
+      (merge default-tr-opts opts dynamic-opts))))
+
+;;;;
 
 (def example-dictionary
   {:en-GB ; Locale
@@ -153,58 +155,6 @@
 
 ;;;;
 
-(def ^:private merge-into-default-opts
-  (enc/fmemoize
-    (fn [opts dynamic-opts]
-      (merge default-tr-opts opts dynamic-opts))))
-
-(def ^:private scoped
-  (enc/fmemoize
-    (fn [locale ?scope resid]
-      (enc/merge-keywords [locale ?scope resid]))))
-
-(defn- search-resids*
-  "loc1 res1 var1 var2 ... base
-        res2 var1 var2 ... base
-        ...
-   loc2 res1 var1 var2 ... base
-        res2 var1 var2 ... base
-        ..."
-  [dict locale-splits ?scope resids]
-  (reduce
-    (fn [acc locale-split]
-      (reduce
-        (fn [acc resid]
-          (reduce
-            (fn [acc lvar]
-              ;; (debugf "Searching: %s" (scoped lvar ?scope resid))
-              (when-let [res (get dict (scoped lvar ?scope resid))]
-                (reduced (reduced (reduced #_[res resid] res)))))
-            acc locale-split))
-        acc resids))
-    nil locale-splits))
-
-(def ^:private search-resids*-cached (enc/fmemoize search-resids*))
-
-(defn- search-resids [cache? dict locale-splits ?scope resids]
-  (if cache?
-    (search-resids*-cached dict locale-splits ?scope resids)
-    (search-resids*        dict locale-splits ?scope resids)))
-
-#_
-(defmacro vargs "Experimental. Compile-time `impl/vargs`."
-  [x]
-  (if (map? x)
-    (do
-      (assert (enc/revery? enc/pos-int? (keys x))
-        "All arg map keys must be +ive non-zero ints")
-      (impl/vargs x))
-    (have vector? x)))
-
-#_(comment (macroexpand '(vargs {1 (do "1") 2 (do "2")})))
-
-;;;;
-
 #?(:clj
    (defn load-resource-at-runtime
      "Experimental, subject to change.
@@ -229,122 +179,167 @@
 
 (comment (load-resource-at-compile-time "foo.edn"))
 
-(let [;;; Local aliases to avoid var deref
-      merge-into-default-opts merge-into-default-opts
-      scoped                  scoped
-      search-resids*          search-resids*
-      search-resids*-cached   search-resids*-cached
-      search-resids           search-resids]
+(defn- caching [cache? f f*]
+  (case cache?
+    (nil false)             f
+    :fn-local (enc/fmemoize f)
+    f* ; Assume truthy => :global
+    ))
 
-  (defn tr
-    "Next gen Taoensso (tr)anslation API:
+(comment (caching true identity identity))
 
-    (tr
-      ;; Opts map to control behaviour:
-      {:default-locale :en
-       :dict ; Resource dictionary
-       {:en {:missing \"Missing translation\"
-             :example {:greet \"Hello %1\"
-                       :farewell \"Goodbye %1, it was nice to meet you!\"}}}}
+(let [;;; Global caches
+      compile-dictionary* (enc/fmemoize impl/compile-dictionary)
+      expand-locales*     (enc/fmemoize impl/expand-locales)
+      search-resids*      (enc/fmemoize impl/search-resids)]
 
-      ;; Descending-preference locales to try:
-      [:fr-FR :en-GB-variation1]
+  (defn new-tr-fn
+    "Returns a new translate (\"tr\") function,
+      (fn tr [locales resource-ids ?resource-args]) -> translation.
 
-      ;; Descending-preference dictionary resorces to try. May contain a
-      ;; final non-keyword fallback:
-      [:example/how-are-you? \"How are you, %1?\"]
+    Common opts:
 
-      ;; Optional arbitrary args for insertion into compiled resource:
-      [\"Steve\"])
-
-    => \"How are you, Steve?\"
-
-
-    Common opts (see `tempura/default-tr-opts` for default vals):
-
-      :default-locale      ; Optional fallback locale to try when given
-                           ; locales don't have the requested resource/s.
+      :default-locale      ; Optional fallback locale to try when given locales don't
+                           ; have the requested resource/s.
+                           ; Default is `:en`.
 
       :dict                ; Dictionary map of resources,
                            ; {<locale> {<k1> ... {<kn> <resource>}}}.
-                           ; See also `tempura/example-dictionary`.
+                           ; See `tempura/example-dictionary` for more info.
 
-      :resource-compiler   ; (fn [resource]) -> [(fn [vargs]) -> <compiled-resource>].
+      :resource-compiler   ; (fn [resource]) -> <(fn [vargs]) -> <compiled-resource>>.
                            ; Useful if you want to customize any part of how
                            ; dictionary resources are compiled.
 
       :missing-resource-fn ; (fn [{:keys [opts locales resource-ids resource-args]}]).
-                           ; Called when requested resource/s cannot be
-                           ; found. Useful for logging, etc. May return a
-                           ; non-nil fallback resource value.
+                           ; Called when requested resource/s cannot be found. Useful
+                           ; for logging, etc. May return a non-nil fallback resource
+                           ; value.
 
-      :cache-dict?         ; Only reason you'd want this off is if
-                           ; you're using :__load-resource imports and
-                           ; and want dictionary to pick up changes.
+      :cache-dict?         ; Cache dictionary compilation? Improves performance,
+                           ; usually safe. You probably want this enabled in
+                           ; production, though you might want it disabled in
+                           ; development if you use `:__load-resource` dictionary
+                           ; imports and want resource changes to automatically
+                           ; reflect.
+                           ;
+                           ; Default is `false` for Clj and `:global` for Cljs.
 
-      :cache-locales?      ; Client will usu. be dealing with a small
-                           ; number of locales, the server often a
-                           ; large number in the general case. `tr`
-                           ; partials may want to enable cached locale
-                           ; expansion (e.g. in the context of a
-                           ; particular user's Ring request, etc.).
+      :cache-locales?      ; Cache locales processing? Improves performance, safe iff
+                           ; the returned `tr` fn will see a limited number of unique
+                           ; `locales` arguments (common example: calling
+                           ; `tempura/new-tr-fn` for each Ring request).
+                           ;
+                           ; Default is `false` for Clj and `:global` for Cljs.
 
-      :cache-resources?    ; For the very highest possible performance
-                           ; when using a limited domain of locales +
-                           ; resource ids."
+      :cache-resources?    ; Cache resource lookup? Improves performance but will use
+                           ; memory for every unique combination of `locales` and
+                           ; `resource-ids`. Safe only if these are limited in number.
+                           ;
+                           ; Default is `false`.
 
-    ([opts locales resource-ids] (tr opts locales resource-ids nil))
-    ([opts locales resource-ids resource-args]
+    Possible values for `:cach-<x>` options:
 
-     (have? vector? resource-ids)
-     ;; (have? [:or nil? vector? map?] resource-args)
+      falsey           ; Use no cache
+      `:fn-local`      ; Use a cache local to the returned `tr` fn
+      `:global`/truthy ; Use a cache shared among all `tr` fns with `:global` cache
 
-     (when (seq resource-ids)
-       (let [opts (merge-into-default-opts opts *tr-opts*)
-             {:keys [default-locale dict scope-fn
-                     cache-dict?      #_cache-dict-compilation?
-                     cache-locales?   #_cache-locale-expansion?
-                     cache-resources? #_cache-resource-id-searches?]}
-             opts
+    Example:
 
-             locales       (if (nil? locales) [] (have vector? locales))
-             dict          (impl/compile-dictionary cache-dict? dict)
-             locale-splits (impl/expand-locales cache-locales?
-                             (enc/conj-some locales default-locale))
+      ;; Define a tr fn
+      (def my-tr ; (fn [locales resource-ids ?resource-args]) -> translation
+        (new-tr-fn
+          {:dict
+           {:en {:missing \"Missing translation\"
+                 :example {:greet \"Hello %1\"
+                           :farewell \"Goodbye %1, it was nice to meet you!\"}}}}))
 
-             ?fb-resource  (let [last-res (peek resource-ids)]
-                             (when-not (keyword? last-res) last-res))
-             resource-ids (if ?fb-resource (pop resource-ids) resource-ids)
+      ;; Then call it
+      (my-tr
+        [:fr-FR :en-GB-variation1] ; Descending-preference locales to try
 
-             ;; For root scopes, disabling scope, other *vars*, etc.
-             resid-scope (when-some [f scope-fn] (f))
+        ;; Descending-preference dictionary resorces to try.
+        ;; May contain a final non-keyword fallback:
+        [:example/how-are-you? \"How are you, %1?\"]
 
-             ?matching-resource
-             (or
-               (when (seq resource-ids) ; *Any* non-fb resource ids?
-                 (search-resids cache-resources?
-                   dict locale-splits resid-scope resource-ids))
+        ;; Optional arbitrary args for insertion into compiled resource:
+        [\"Steve\"])
 
-               ?fb-resource
+        => \"How are you, Steve?\"
 
-               ;; No scope from here:
+    See `tempura/default-tr-opts` for detailed default options.
+    See also `tempura/tr`.
 
-               (when-let [mrf (get opts :missing-resource-fn)]
-                 (mrf ; Nb can return nnil to use result as resource
-                   {:opts opts :locales locales :resource-ids resource-ids
-                    :resource-args resource-args}))
+    See GitHub README for more info & examples, Ref.
+      https://github.com/ptaoussanis/tempura"
 
-               (search-resids cache-resources?
-                 dict locale-splits nil [:missing]))]
+    [opts]
+    (let [opts (merge-into-default-opts opts *tr-opts*)
+          {:keys [default-locale
+                  dict
+                  scope-fn
+                  cache-dict?
+                  cache-locales?
+                  cache-resources?]} opts
 
-         (when-let [r ?matching-resource]
-           (let [resource-compiler (get opts :resource-compiler)
-                 vargs (if-some [args resource-args] (impl/vargs args) [])]
+          compile-dictionary (caching cache-dict?      impl/compile-dictionary compile-dictionary*)
+          expand-locales     (caching cache-locales?   impl/expand-locales     expand-locales*)
+          search-resids      (caching cache-resources? impl/search-resids      search-resids*)]
 
-             ;; Could also supply matching resid to compiler, but think it'd
-             ;; be better to keep ids single-purpose. Any meta compiler
-             ;; options, notes, etc. should be provided with res content.
-             ((resource-compiler r) vargs))))))))
+      (fn tr
+        ([locales resource-ids              ] (tr locales resource-ids nil))
+        ([locales resource-ids resource-args]
+
+         (have? vector? resource-ids)
+         ;; (have? [:or nil? vector? map?] resource-args)
+
+         (when (seq resource-ids)
+           (let [dict          (compile-dictionary dict)
+                 locales       (force locales)
+                 locales       (if (nil? locales) [] (have vector? locales))
+                 locale-splits (expand-locales (enc/conj-some locales default-locale))
+
+                 ?fb-resource  (let [last-res (peek resource-ids)]
+                                 (when-not (keyword? last-res) last-res))
+                 resource-ids (if ?fb-resource (pop resource-ids) resource-ids)
+
+                 ;; For root scopes, disabling scope, other *vars*, etc.
+                 resid-scope (when-some [f scope-fn] (f))
+
+                 ?matching-resource
+                 (or
+                   (when (seq resource-ids) ; *Any* non-fb resource ids?
+                     (search-resids dict locale-splits resid-scope resource-ids))
+
+                   ?fb-resource
+
+                   ;; No scope from here:
+
+                   (when-let [mrf (get opts :missing-resource-fn)]
+                     (mrf ; Nb can return nnil to use result as resource
+                       {:opts opts :locales locales :resource-ids resource-ids
+                        :resource-args resource-args}))
+
+                   (search-resids dict locale-splits nil [:missing]))]
+
+             (when-let [r ?matching-resource]
+               (let [resource-compiler (get opts :resource-compiler)
+                     vargs (if-some [args resource-args] (impl/vargs args) [])]
+
+                 ;; Could also supply matching resid to compiler, but think it'd
+                 ;; be better to keep ids single-purpose. Any meta compiler
+                 ;; options, notes, etc. should be provided with res content.
+                 ((resource-compiler r) vargs))))))))))
+
+(defn tr
+  "Translate (\"tr\") function,
+    (fn tr [opts locales resource-ids ?resource-args]) -> translation.
+
+  See `tempura/new-tr-fn` for full documentation, and for fn-local caching."
+
+  ([opts locales resource-ids              ] (tr opts locales resource-ids nil))
+  ([opts locales resource-ids resource-args]
+   ((new-tr-fn opts) locales resource-ids resource-args)))
 
 (comment
   (tr {} [:en] [:resid1 "Hello there"])   ; => text
@@ -366,7 +361,7 @@
   (tr c1 [:en] [:foo :bar])
   (with-tr-scope :example (tr c1 [:en] [:foo]))
 
-  (qb 1000
+  (qb 1e3
     (tr c1 [:en] ["Hi %1"]        ["Steve"])
     (tr c1 [:en] ["Hi %1"]        {1 "Steve"})
     (tr c1 [:en] [ "Hi **%1**!"]  ["Steve"])
@@ -406,9 +401,10 @@
              (sort-by m-sort-by (keys m-sort-by))))))))
 
 (comment
-  (mapv parse-http-accept-header
-    [nil "en-GB" "da, en-gb;q=0.8, en;q=0.7" "en-GB,en;q=0.8,en-US;q=0.6"
-     "en-GB  ,  en; q=0.8, en-US;  q=0.6" "a," "es-ES, en-US"]))
+  (enc/qb 1e4
+    (mapv parse-http-accept-header
+      [nil "en-GB" "da, en-gb;q=0.8, en;q=0.7" "en-GB,en;q=0.8,en-US;q=0.6"
+       "en-GB  ,  en; q=0.8, en-US;  q=0.6" "a," "es-ES, en-US"]))) ; 133.9
 
 #?(:clj
    (defn wrap-ring-request

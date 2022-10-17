@@ -2,7 +2,7 @@
   "Private implementation details."
   (:require
    [clojure.string :as str]
-   #?(:clj  [clojure.test    :as test :refer        [deftest is]])
+   [clojure.test   :as test :refer [deftest is]]
    #?(:clj  [taoensso.encore :as enc  :refer        [have have? qb]])
    #?(:cljs [taoensso.encore :as enc  :refer-macros [have have?]])))
 
@@ -325,7 +325,25 @@
 
 ;;;;
 
-(def expand-locales
+(defn expand-locale
+  ":en-GB-var1 -> [:en-GB-var1 :en-GB :en], etc."
+  [locale]
+  (let [parts (str/split (str/lower-case (name locale)) #"[_-]")]
+    (if (== (count parts) 1)
+      [locale]
+      (loop [[p0 & pn] parts, sb nil, acc ()]
+
+        (let [sb  (if sb (enc/sb-append sb "-" p0) (enc/str-builder p0))
+              acc (conj acc (keyword (str sb)))]
+
+          (if pn
+            (recur pn sb acc)
+            (vec         acc)))))))
+
+(comment (enc/qb 1e5 (expand-locale :en-GB-var1))) ; 91.72
+
+(defn expand-locales
+  [locales]
 
   ;; TODO Note that this fallback preference approach might not be
   ;; sophisticated enough for use with BCP 47, etc. -
@@ -335,50 +353,28 @@
   ;; strategy later. Indeed might not be necessary if consumers can provide
   ;; an appropriately prepared input for this fn.
 
-  (let [expand-locale
-        (enc/fmemoize
-          (fn [locale]
-            (let [parts (str/split (str/lower-case (name locale)) #"[_-]")]
-              (mapv #(keyword (str/join "-" %))
-                (take-while identity (iterate butlast parts))))))
+  (if (== (count locales) 1)
+    [(expand-locale (nth locales 0))]
+    (let [[acc _]
+          (reduce
+            (fn [[acc seen] in]
+              (let [lvars (expand-locale in)
+                    lbase (peek lvars)]
 
-        expand-locales*
-        (fn [locales]
-          (if (= (count locales) 1)
-            [(expand-locale (get locales 0))]
-            (let [[acc _]
-                  (reduce
-                    (fn [[acc seen] in]
-                      (let [lvars (expand-locale in)
-                            lbase (peek lvars)]
-                        (if (seen lbase)
-                          [acc seen]
-                          [(conj acc lvars) (conj seen lbase)])))
-                    [[] #{}]
-                    locales)]
-              acc)))
+                (if (seen lbase)
+                  [acc seen]
+                  [(conj acc lvars) (conj seen lbase)])))
 
-        expand-locales*-cached (enc/fmemoize expand-locales*)]
+            [[] #{}]
+            locales)]
+      acc)))
 
-    ;; Inputs are combinatorial, so can't cache by default:
-    (fn [cache? locales]
-      (if cache?
-        (expand-locales*-cached locales)
-        (expand-locales*        locales)))))
+(comment (enc/qb 1e4 (expand-locales [:en-US-var1 :fr-FR :fr :en-GD :DE-de]))) ; 38.0
 
-(comment
-  (qb 1e5 ; [28.12 159.55]
-    (expand-locales nil [:en-GB-var1])
-    (expand-locales nil [:en-US-var1 :fr-FR :fr :en-GD :DE-de])))
-
-#?(:clj
-   (deftest _expand-locales
-     (is (= [[:en-us-var1 :en-us :en] [:fr-fr :fr] [:de-de :de]]
-           (expand-locales nil [:en-us-var1 :fr-fr :fr :en-gd :de-de])))
-     (is (= [[:en] [:fr-fr :fr] [:de-de :de]] ; Stop :en-* after base :en
-           (expand-locales nil [:en :en-us-var1 :fr-fr :fr :en-gd :de-de])))
-     (is (= [[:en-us :en] [:fr-fr :fr]]    ; Never change langs before vars
-           (expand-locales nil [:en-us :fr-fr :en])))))
+(deftest _expand-locales
+  [(is (= (expand-locales [:en-us-var1     :fr-fr :fr :en-gd :de-de]) [[:en-us-var1 :en-us :en] [:fr-fr :fr] [:de-de :de]]))
+   (is (= (expand-locales [:en :en-us-var1 :fr-fr :fr :en-gd :de-de]) [[:en]                    [:fr-fr :fr] [:de-de :de]])) ; Stop :en-* after base :en
+   (is (= (expand-locales [:en-us :fr-fr :en])                        [[:en-us :en]             [:fr-fr :fr]]))]) ; Never change langs before vars
 
 #?(:clj (def ^:private cached-read-edn (enc/fmemoize enc/read-edn)))
 (defn load-resource [rname]
@@ -402,46 +398,35 @@
 
 (comment (load-resource "foo.edn"))
 
-(def compile-dictionary
-  (let [preprocess ; For pointers and slurps, etc.
+(let [preprocess ; For pointers and slurps, etc.
+      (fn [dict]
+        (reduce-kv
+          (fn rf1 [acc k v]
+            (cond
+              (keyword? v) ; Pointer
+              (let [path (enc/explode-keyword v)]
+                (assoc acc k (get-in dict (mapv keyword path))))
+
+              (map? v)
+              (if-let [io-res (:__load-resource v)]
+                (assoc acc k (load-resource io-res))
+                (assoc acc k (reduce-kv rf1 {} v)))
+
+              :else (assoc acc k v)))
+          {} dict))
+
+      as-paths ; For locale normalization, lookup speed, etc.
+      (enc/fmemoize ; Ref. transparent, limited domain
         (fn [dict]
-          (reduce-kv
-            (fn rf1 [acc k v]
-              (cond
-                (keyword? v) ; Pointer
-                (let [path (enc/explode-keyword v)]
-                  (assoc acc k (get-in dict (mapv keyword path))))
+          (reduce
+            (fn [acc in]
+              (let [[locale] in
+                    normed-locale (str/lower-case (name locale))
+                    in (assoc in 0 normed-locale)]
+                (assoc acc (enc/merge-keywords (pop in)) (peek in))))
+            {} (node-paths map? dict))))]
 
-                (map? v)
-                (if-let [io-res (:__load-resource v)]
-                  (assoc acc k (load-resource io-res))
-                  (assoc acc k (reduce-kv rf1 {} v)))
-
-                :else (assoc acc k v)))
-            {} dict))
-
-        as-paths ; For locale normalization, lookup speed, etc.
-        (enc/fmemoize ; Ref transparent
-          (fn [dict]
-            (reduce
-              (fn [acc in]
-                (let [[locale] in
-                      normed-locale (str/lower-case (name locale))
-                      in (assoc in 0 normed-locale)]
-                  (assoc acc (enc/merge-keywords (pop in)) (peek in))))
-              {} (node-paths map? dict))))
-
-        compile-dictionary*
-        (enc/memoize 1000 ; Minor caching to help blunt impact on dev benchmarks
-          (fn [dict] (-> dict preprocess preprocess as-paths)))
-
-        compile-dictionary*-cached (enc/fmemoize compile-dictionary*)]
-
-    ;; We may want resource reloads in dev-mode, so can't cache by default:
-    (fn [cache? dict]
-      (if cache?
-        (compile-dictionary*-cached dict)
-        (compile-dictionary*        dict)))))
+  (defn compile-dictionary [dict] (-> dict preprocess as-paths)))
 
 (comment
   (qb 1e4
@@ -463,3 +448,45 @@
     (have vector? x)))
 
 (comment (qb 1e4 (vargs {1 :a 2 :b 3 :c 5 :d})))
+
+;;;;
+
+(def scoped
+  (enc/fmemoize
+    (fn [locale ?scope resid]
+      (enc/merge-keywords [locale ?scope resid]))))
+
+(comment (scoped :en :scope :resid))
+
+(defn search-resids
+  "loc1 res1 var1 var2 ... base
+        res2 var1 var2 ... base
+        ...
+   loc2 res1 var1 var2 ... base
+        res2 var1 var2 ... base
+        ..."
+  [dict locale-splits ?scope resids]
+  (reduce
+    (fn [acc locale-split]
+      (reduce
+        (fn [acc resid]
+          (reduce
+            (fn [acc lvar]
+              ;; (debugf "Searching: %s" (scoped lvar ?scope resid))
+              (when-let [res (get dict (scoped lvar ?scope resid))]
+                (reduced (reduced (reduced #_[res resid] res)))))
+            acc locale-split))
+        acc resids))
+    nil locale-splits))
+
+#_
+(defmacro vargs "Experimental. Compile-time `impl/vargs`."
+  [x]
+  (if (map? x)
+    (do
+      (assert (enc/revery? enc/pos-int? (keys x))
+        "All arg map keys must be +ive non-zero ints")
+      (impl/vargs x))
+    (have vector? x)))
+
+#_(comment (macroexpand '(vargs {1 (do "1") 2 (do "2")})))
