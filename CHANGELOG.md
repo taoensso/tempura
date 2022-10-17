@@ -1,9 +1,22 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
+## v1.4.0 - 2022 Oct 17
+
+```clojure
+[com.taoensso/tempura "1.4.0"]
+```
+
+> This is a minor maintenance release that should be non-breaking.
+
+* **New**: [Experimental] Add `:experimental/compact-vectors?` option to `get-default-resource-compiler`
+* **New**: [Experimental] Add `:default-tag` option to `default-resource-compiler`
+* Update dependencies
+
+
 ## v1.3.0 - 2022 May 12
 
 ```clojure
-[com.taoensso/tempura "1.3.0"] ; See CHANGELOG for details
+[com.taoensso/tempura "1.3.0"]
 ```
 
 > This is a minor maintenance release that should be non-breaking for the vast majority of users.
