@@ -27,34 +27,68 @@
 
 ;;;;
 
+(defn- compact [xs]
+  (let [[x0 & xn] xs
+        out
+        (loop [[x1 & xn*] xn
+               acc [x0]
+               sb  nil]
+
+          (cond
+            (nil?    x1) (if sb (conj acc (str sb)) acc)
+            (vector? x1)
+            (recur xn*
+              (conj
+                (if sb (conj acc (str sb)) acc)
+                (compact x1)) nil)
+
+            :else
+            (recur xn* acc
+              (if sb
+                (enc/sb-append sb (str x1))
+                (enc/str-builder  (str x1))))))]
+
+    (if (and (== (count out) 2) (enc/kw-identical? (nth out 0) :span))
+      (nth out 1)
+      (do  out))))
+
+(comment (enc/qb 1e4 (compact [:span "a" "b" [:strong "c" "d"] "e" "f"])))
+
 (def get-default-resource-compiler
   "Implementation detail.
   Good general-purpose resource compiler.
   Supports output of text, and Hiccup forms with simple Markdown styles."
   (enc/fmemoize
-    (fn [{:keys [default-tag escape-html?]
+    (fn [{:keys [default-tag escape-html? experimental/compact-vectors?]
           :or   {default-tag :span}}]
 
-      (let [esc1 (if escape-html? impl/escape-html             identity)
-            esc2 (if escape-html? impl/vec-escape-html-in-strs identity)]
+      (let [?esc1    (if escape-html?     impl/escape-html             identity)
+            ?esc2    (if escape-html?     impl/vec-escape-html-in-strs identity)
+            ?compact (if compact-vectors? (fn [f] (comp compact f))    identity)]
 
         (enc/fmemoize
           (fn [res] ; -> [(fn [vargs]) -> <compiled-resource>]
             (enc/cond! ; Nb no keywords, nils, etc.
               (fn?     res) (-> res) ; Completely arb, full control
-              (string? res) (-> res esc1 impl/str->vargs-fn)
-              (vector? res) (-> res
-                              (impl/vec->vtag default-tag)
-                              impl/vec-explode-styles-in-strs
-                              impl/vec-explode-args-in-strs
-                              esc2 ; Avoid for Reactjs
-                              impl/vec->vargs-fn))))))))
+              (string? res) (-> res ?esc1 impl/str->vargs-fn)
+              (vector? res)
+              (?compact ; [:span "foo" "bar"] -> "foobar", etc.
+                (-> res
+                  (impl/vec->vtag default-tag)
+                  impl/vec-explode-styles-in-strs
+                  impl/vec-explode-args-in-strs
+                  ?esc2              ; Avoid for Reactjs
+                  impl/vec->vargs-fn ; (fn [args]) -> result
+                  )))))))))
 
 (comment
-  (let [rc (get-default-resource-compiler {})]
-    [((rc  "Hi %1 :-)")  ["Steve"])
-     ((rc  "Hi **%1**")  ["Steve"])
-     ((rc ["Hi **%1**"]) ["Steve"])]))
+  (let [rc (get-default-resource-compiler
+             {:experimental/compact-vectors? #_false true})]
+
+    [((rc "Hi %1 :-)")           ["Steve"])
+     ((rc "Hi **%1** :-)")       ["Steve"])
+     ((rc ["a **b %1 c** d %2"]) [1 2])
+     ((rc ["a" "b"])             [])]))
 
 (def default-tr-opts
   {:default-locale :en
@@ -315,8 +349,10 @@
 (comment
   (tr {} [:en] [:resid1 "Hello there"])   ; => text
   (tr {} [:en] [:resid1 ["Hello world"]]) ; => vec (Hiccup, etc.)
+  (tr {} [:en] [:resid1 ["Hello %1"]] ["Steve"])
   (tr {} [:en] [:resid2 ["Hello **world**"]])
   (tr {} [:en] [:resid3 ["Hello " [:br] [:strong "world"]]])
+  (tr {} [:en] [["foo"]])
 
   (def c1
     {:cache-dict?    false
