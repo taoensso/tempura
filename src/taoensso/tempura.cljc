@@ -400,6 +400,10 @@
            (into [] (map (fn [[choice]] choice))
              (sort-by m-sort-by (keys m-sort-by))))))))
 
+#?(:clj
+   (def ^:private parse-http-accept-header*
+     (enc/memoize 1000 parse-http-accept-header)))
+
 (comment
   (enc/qb 1e4
     (mapv parse-http-accept-header
@@ -409,26 +413,35 @@
 #?(:clj
    (defn wrap-ring-request
      "Alpha, subject to change.
-     Wraps Ring handler to add the following keys to requests:
+     Wraps Ring handler to add the following keys to Ring requests:
 
-       :tempura/accept-langs ; e.g. [\"en-ES\" \"en-US\"], parsed from
-                             ; request's Accept-Language HTTP header.
+       :tempura/accept-langs_ ; Possible delay with value parsed from Ring
+                              ; request's \"Accept-Language\" HTTP header.
+                              ; E.g. value: [\"en-ES\" \"en-US\"].
 
-       :tempura/tr ; (partial tr tr-opts (:tr-locales ring-req accept-langs)),
-                   ; (fn ([resource-ids]) ([resource-ids args]))"
+       :tempura/tr ; (partial tempura/new-tr-fn tr-opts
+                   ;   (or locales (:tempura/locales ring-req) accept-langs_)),
+                   ; => (fn [resource-ids ?resource-args]) -> translation
 
-     [handler {:keys [tr-opts]}]
+     `tr-opts` will by default include {:cache-locales? :fn-local}.
+
+     See `tempura/new-tr-fn` for full documentation on `tr-opts`, etc."
+
+     [handler {:keys [tr-opts locales]}]
+
      (fn [ring-req]
-       (let [accept-langs
-             (when-let [h (get-in ring-req [:headers "accept-language"])]
-               (parse-http-accept-header h))
+       (let [accept-langs_
+             (delay
+               (when-let [h (get-in ring-req [:headers "accept-language"])]
+                 (parse-http-accept-header* h)))
 
-             tr-opts (enc/assoc-nx tr-opts :cache-locales? true)
-             tr      (partial tr tr-opts (:tr-locales ring-req accept-langs))
+             locales_ (or locales (get ring-req :tempura/locales) accept-langs_)
+             tr-opts  (enc/assoc-nx tr-opts :cache-locales? true)
+             tr       (partial (new-tr-fn tr-opts) locales_)
 
              ring-req
              (assoc ring-req
-               :tempura/accept-langs accept-langs
+               :tempura/accept-langs_ accept-langs_
                :tempura/tr tr)]
 
          (handler ring-req)))))
