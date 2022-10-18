@@ -1,10 +1,9 @@
 (ns taoensso.tempura.impl
   "Private implementation details."
   (:require
-   [clojure.string :as str]
-   [clojure.test   :as test :refer [deftest is]]
-   #?(:clj  [taoensso.encore :as enc  :refer        [have have? qb]])
-   #?(:cljs [taoensso.encore :as enc  :refer-macros [have have?]])))
+   [clojure.string  :as str]
+   [clojure.test    :as test :refer [deftest testing is]]
+   [taoensso.encore :as enc  :refer [have have?]]))
 
 (comment (test/run-tests))
 
@@ -79,25 +78,24 @@
   ((str->vargs-fn "%2")    ["a" "b"]) ; "b"
   (let [f1 (fn [vargs] (apply format "hello %s %s" vargs))
         f2 (str->vargs-fn "hello %1 %2")]
-    (qb 1e5
+    (enc/qb 1e5
       (f1 ["a1" "a2"])
       (f2 ["a1" "a2"]))))
 
-#?(:clj
-   (deftest _str->vargs-fn
-     (is (thrown? Exception (str->vargs-fn nil)))
-     ;; (is (thrown? Exception ((str->vargs-fn "%") "non-vector input")))
-     (is (= "hi"      ((str->vargs-fn "hi")         [])))
-     (is (= "hi"      ((str->vargs-fn "hi")         ["unused arg"])))
-     (is (= "hi %1"   ((str->vargs-fn "hi `%1")     [])))
-     (is (= "hi a1"   ((str->vargs-fn "hi %1")      ["a1"])))
-     (is (= "hi :a1"  ((str->vargs-fn "hi %1")      [:a1]))) ; `str` called on args
-     (is (= "hi "     ((str->vargs-fn "hi %1")      [])))    ; insufficient args
-     (is (= "hi nil"  ((str->vargs-fn "hi %1" #(if (nil? %) "nil" %)) []))) ; nil-patch
-     (is (= "a1, hi"  ((str->vargs-fn "%1, hi") ["a1"]))) ; "" start with arg
-     (is (= "hi :1 :2 :1 :3 :1 %1 :1 %3 :11 a:2b%end % %s"
-           ((str->vargs-fn "hi %1 %2 %1 %3 %1 `%1 %1 `%3 %11 a%2b`%end % %s")
-            [:1 :2 :3 :4])))))
+(deftest ^:private _str->vargs-fn
+  (is (enc/throws? (str->vargs-fn nil)))
+  ;; (is (enc/throws? ((str->vargs-fn "%") "non-vector input")))
+  (is (= "hi"      ((str->vargs-fn "hi")         [])))
+  (is (= "hi"      ((str->vargs-fn "hi")         ["unused arg"])))
+  (is (= "hi %1"   ((str->vargs-fn "hi `%1")     [])))
+  (is (= "hi a1"   ((str->vargs-fn "hi %1")      ["a1"])))
+  (is (= "hi :a1"  ((str->vargs-fn "hi %1")      [:a1]))) ; `str` called on args
+  (is (= "hi "     ((str->vargs-fn "hi %1")      [])))    ; insufficient args
+  (is (= "hi nil"  ((str->vargs-fn "hi %1" #(if (nil? %) "nil" %)) []))) ; nil-patch
+  (is (= "a1, hi"  ((str->vargs-fn "%1, hi") ["a1"]))) ; "" start with arg
+  (is (= "hi :1 :2 :1 :3 :1 %1 :1 %3 :11 a:2b%end % %s"
+        ((str->vargs-fn "hi %1 %2 %1 %3 %1 `%1 %1 `%3 %11 a%2b`%end % %s")
+         [:1 :2 :3 :4]))))
 
 (defn- mapv-nested     [f v] (mapv (fn f1 [in] (if (vector? in) (mapv f1 in) (f in))) v))
 (defn- reducev-nested [rf v]
@@ -166,20 +164,19 @@
                  (assoc acc k (argval-fn (get vargs v)))))
              v idxs->arg-idxs)))))))
 
-#?(:clj
-   (deftest _vec->vargs-fn
-     (is (thrown? Exception (vec->vargs-fn nil)))
-     ;; (is (thrown? Exception ((vec->vargs-fn ['%1]) "non vector input")))
-     (is (= ["hi"]      ((vec->vargs-fn ["hi"])     [])))
-     (is (= ["hi"]      ((vec->vargs-fn ["hi"])     ["unused arg"])))
-     (is (= ["hi" "a1"] ((vec->vargs-fn ["hi" '%1]) ["a1"])))
-     (is (= ["hi" :a1]  ((vec->vargs-fn ["hi" '%1]) [:a1]))) ; Arb args
-     (is (= ["hi" nil]  ((vec->vargs-fn ["hi" '%1]) [])))    ; Insufficient args
-     (is (= ["hi" [:strong :1] ", " :1 :2]
-           ((vec->vargs-fn ["hi" [:strong '%1] ", " '%1 '%2]) [:1 :2 :3])))
-     (is (= ["a1" ", hi"] ((vec->vargs-fn ['%1 ", hi"]) ["a1"]))) ; Start with arg
-     (is (= ["hi" {:attr "foo %1"}] ; Don't touch attrs
-           ((vec->vargs-fn ["hi" {:attr "foo %1"}]) ["a1"])))))
+(deftest ^:private _vec->vargs-fn
+  (is (enc/throws? (vec->vargs-fn nil)))
+  ;; (is (enc/throws? ((vec->vargs-fn ['%1]) "non vector input")))
+  (is (= ["hi"]      ((vec->vargs-fn ["hi"])     [])))
+  (is (= ["hi"]      ((vec->vargs-fn ["hi"])     ["unused arg"])))
+  (is (= ["hi" "a1"] ((vec->vargs-fn ["hi" '%1]) ["a1"])))
+  (is (= ["hi" :a1]  ((vec->vargs-fn ["hi" '%1]) [:a1]))) ; Arb args
+  (is (= ["hi" nil]  ((vec->vargs-fn ["hi" '%1]) [])))    ; Insufficient args
+  (is (= ["hi" [:strong :1] ", " :1 :2]
+        ((vec->vargs-fn ["hi" [:strong '%1] ", " '%1 '%2]) [:1 :2 :3])))
+  (is (= ["a1" ", hi"] ((vec->vargs-fn ['%1 ", hi"]) ["a1"]))) ; Start with arg
+  (is (= ["hi" {:attr "foo %1"}] ; Don't touch attrs
+        ((vec->vargs-fn ["hi" {:attr "foo %1"}]) ["a1"]))))
 
 ;;;;
 
@@ -371,7 +368,7 @@
 
 (comment (enc/qb 1e4 (expand-locales [:en-US-var1 :fr-FR :fr :en-GD :DE-de]))) ; 38.0
 
-(deftest _expand-locales
+(deftest ^:private _expand-locales
   [(is (= (expand-locales [:en-us-var1     :fr-fr :fr :en-gd :de-de]) [[:en-us-var1 :en-us :en] [:fr-fr :fr] [:de-de :de]]))
    (is (= (expand-locales [:en :en-us-var1 :fr-fr :fr :en-gd :de-de]) [[:en]                    [:fr-fr :fr] [:de-de :de]])) ; Stop :en-* after base :en
    (is (= (expand-locales [:en-us :fr-fr :en])                        [[:en-us :en]             [:fr-fr :fr]]))]) ; Never change langs before vars
@@ -429,7 +426,7 @@
   (defn compile-dictionary [dict] (-> dict preprocess as-paths)))
 
 (comment
-  (qb 1e4
+  (enc/qb 1e4
     (compile-dictionary nil
       {:en-GB
        {:example {:foo "foo"
@@ -447,7 +444,7 @@
       (mapv (fn [idx] (get x idx)) (range 1 (inc max-idx))))
     (have vector? x)))
 
-(comment (qb 1e4 (vargs {1 :a 2 :b 3 :c 5 :d})))
+(comment (enc/qb 1e4 (vargs {1 :a 2 :b 3 :c 5 :d})))
 
 ;;;;
 

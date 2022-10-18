@@ -3,8 +3,8 @@
   {:author "Peter Taoussanis (@ptaoussanis)"}
   (:require
    [clojure.string :as str]
-   [clojure.test   :as test :refer [deftest is]]
-   [taoensso.encore       :as enc  :refer [have have? qb]]
+   [clojure.test   :as test :refer [deftest testing is]]
+   [taoensso.encore       :as enc  :refer [have have?]]
    [taoensso.tempura.impl :as impl :refer []]))
 
 (enc/assert-min-encore-version [3 23 0])
@@ -67,16 +67,16 @@
           (fn?     res) (-> res) ; Completely arb, full control
           (string? res) (-> res ?esc1 impl/str->vargs-fn)
           (vector? res)
-          (?compact ; [:span "foo" "bar"] -> "foobar", etc.
+          (?compact ; [:span "foo" "bar"] -> "foobar", etc. (uncached)
             (-> res
               (impl/vec->vtag default-tag)
               impl/vec-explode-styles-in-strs
               impl/vec-explode-args-in-strs
               ?esc2              ; Avoid for Reactjs
-              impl/vec->vargs-fn ; (fn [args]) -> result
+              impl/vec->vargs-fn ; (fn [args]) -> result (uncached)
               )))))))
 
-(deftest _get-default-resource-compiler
+(deftest ^:private _get-default-resource-compiler
   (let [rc (get-default-resource-compiler
              {:experimental/compact-vectors? #_false true})]
 
@@ -270,8 +270,9 @@
     See `tempura/default-tr-opts` for detailed default options.
     See also `tempura/tr`.
 
-    See GitHub README for more info & examples, Ref.
-      https://github.com/ptaoussanis/tempura"
+    For further info & examples, Ref.
+      https://github.com/ptaoussanis/tempura and
+      https://github.com/ptaoussanis/tempura/wiki/Tempura-documentation"
 
     [opts]
     (let [opts (merge-into-default-opts opts *tr-opts*)
