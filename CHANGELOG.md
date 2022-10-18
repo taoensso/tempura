@@ -1,5 +1,17 @@
 > This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
 
+## v1.5.0 - 2022 Oct 18
+
+```clojure
+[com.taoensso/tempura "1.5.0"]
+```
+
+> This is a major maintenance release that should be non-breaking for most users.
+
+* **New**: Add `new-tr-fn` for creating `tr` partials with fn-local cache.
+* **BREAKING**: `wrap-ring-request` (alpha) API changes, see commit ed688af18de2 for details.
+
+
 ## v1.4.0 - 2022 Oct 17
 
 ```clojure
