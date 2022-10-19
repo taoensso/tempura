@@ -68,9 +68,7 @@
 
 ```
 
-## Tutorial
-
-See [here][tutorial] for a detailed tutorial by [Dr. Wolfram Schroers][@field-theory] (thanks Wolfram!).
+See the [wiki docs] for a more detailed discussion of Tempura's resource search behaviour.
 
 ## Quickstart
 
@@ -198,6 +196,8 @@ I'll note that since the API is so pleasant, it's actually often much _less_ eff
 
 If it's easy to use, it'll be easy to get your developers in the habit of writing content this way - which means that there's a trivial path to adding multilingual support whenever it makes sense to do so.
 
+> See also the [wiki docs] for more info.
+
 ## FAQ
 
 #### How's the performance? These seem like expensive transformations.
@@ -271,3 +271,4 @@ Copyright &copy; 2016-2022 [Peter Taoussanis].
 [Reagent]: https://github.com/reagent-project/reagent
 [tutorial]: https://gist.github.com/field-theory/b7c05953e32645d880eae382171a85d7
 [@field-theory]: https://github.com/field-theory
+[wiki docs]: https://github.com/ptaoussanis/tempura/wiki
