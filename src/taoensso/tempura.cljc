@@ -295,11 +295,16 @@
          ;; (have? [:or nil? vector? map?] resource-args)
 
          (when (seq resource-ids)
-           (let [dict          (compile-dictionary dict)
-                 locales       (force locales)
-                 locales       (if (nil? locales) [] (have vector? locales))
-                 locale-splits (expand-locales (enc/conj-some locales default-locale))
+           (let [dict    (compile-dictionary dict)
+                 locales (force locales)
+                 locales (if (nil? locales) [] (have vector? locales))
+                 locales
+                 (enc/cond
+                   (nil?    default-locale)       locales
+                   (vector? default-locale) (into locales default-locale) ; Undocumented
+                   :else                    (conj locales default-locale))
 
+                 locale-splits (expand-locales locales)
                  ?fb-resource  (let [last-res (peek resource-ids)]
                                  (when-not (keyword? last-res) last-res))
                  resource-ids (if ?fb-resource (pop resource-ids) resource-ids)
