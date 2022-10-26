@@ -7,7 +7,7 @@
    [taoensso.encore       :as enc  :refer [have have?]]
    [taoensso.tempura.impl :as impl :refer []]))
 
-(enc/assert-min-encore-version [3 23 0])
+(enc/assert-min-encore-version [3 31 0])
 
 (comment (test/run-tests))
 
