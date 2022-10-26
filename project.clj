@@ -1,4 +1,4 @@
-(defproject com.taoensso/tempura "1.5.0"
+(defproject com.taoensso/tempura "1.5.3"
   :author "Peter Taoussanis <https://www.taoensso.com>"
   :description "Pure Clojure/Script i18n translations library"
   :url "https://github.com/ptaoussanis/tempura"

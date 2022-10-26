@@ -4,7 +4,7 @@
 **[CHANGELOG]** | [API] | current [Break Version]:
 
 ```clojure
-[com.taoensso/tempura "1.5.0"] ; See CHANGELOG for details
+[com.taoensso/tempura "1.5.3"] ; See CHANGELOG for details
 ```
 
 > See [here](https://taoensso.com/clojure/backers) if you're interested in helping support my open-source work, thanks! - Peter Taoussanis
@@ -75,8 +75,8 @@ See the [wiki docs] for a more detailed discussion of Tempura's resource search 
 Add the necessary dependency to your project:
 
 ```clojure
-Leiningen: [com.taoensso/tempura "1.5.0"] ; or
-deps.edn:   com.taoensso/tempura {:mvn/version "1.5.0"}
+Leiningen: [com.taoensso/tempura "1.5.3"] ; or
+deps.edn:   com.taoensso/tempura {:mvn/version "1.5.3"}
 ```
 
 Setup your namespace imports:
