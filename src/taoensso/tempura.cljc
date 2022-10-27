@@ -3,13 +3,10 @@
   {:author "Peter Taoussanis (@ptaoussanis)"}
   (:require
    [clojure.string :as str]
-   [clojure.test   :as test :refer [deftest testing is]]
    [taoensso.encore       :as enc  :refer [have have?]]
    [taoensso.tempura.impl :as impl :refer []]))
 
 (enc/assert-min-encore-version [3 31 0])
-
-(comment (test/run-tests))
 
 (def ^:dynamic *tr-opts*  nil)
 (def ^:dynamic *tr-scope* nil)
@@ -48,6 +45,7 @@
       (nth out 1)
       (do  out))))
 
+(comment :see-tests)
 (comment (enc/qb 1e4 (compact [:span "a" "b" [:strong "c" "d"] "e" "f"]))) ; 7.16
 
 (defn get-default-resource-compiler
@@ -76,14 +74,7 @@
               impl/vec->vargs-fn ; (fn [args]) -> result (uncached)
               )))))))
 
-(deftest ^:private _get-default-resource-compiler
-  (let [rc (get-default-resource-compiler
-             {:experimental/compact-vectors? #_false true})]
-
-    [(is (= ((rc "Hi %1 :-)")     ["Steve"])   "Hi Steve :-)"))
-     (is (= ((rc "Hi **%1** :-)") ["Steve"])   "Hi **Steve** :-)"))
-     (is (= ((rc ["a **b %1 c** d %2"]) [1 2]) [:span "a " [:strong "b 1 c"] " d 2"]))
-     (is (= ((rc ["a" "b"]) [])               "ab"))]))
+(comment :see-tests)
 
 (def default-tr-opts
   {:default-locale :en
