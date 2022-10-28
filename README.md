@@ -1,20 +1,22 @@
 <a href="https://www.taoensso.com" title="More stuff by @ptaoussanis at www.taoensso.com">
-<img src="https://www.taoensso.com/taoensso-open-source.png" alt="Taoensso open-source" width="400"/></a>
+<img src="https://www.taoensso.com/taoensso-open-source.png" alt="Taoensso open-source" width="350"/></a>
 
-**[CHANGELOG]** | [API] | current [Break Version]:
+**[CHANGELOG][]** | [API][] | current [Break Version][]:
 
 ```clojure
 [com.taoensso/tempura "1.5.3"] ; See CHANGELOG for details
 ```
 
-> See [here](https://taoensso.com/clojure/backers) if you're interested in helping support my open-source work, thanks! - Peter Taoussanis
+> See [here][backers] if to help support my open-source work, thanks! - [Peter Taoussanis][Taoensso.com]
 
-# Tempura: a pure Clojure/Script i18n translations library
+# Tempura
+
+### Simple text localization library for Clojure/Script
 
 ## Objectives
 
  * Tiny (**single fn**), **cross-platform all-Clojure API** for providing multilingual content.
- * Match [gettext]'s convenience for **embedding default content** directly in code (optional).
+ * Match [gettext][]'s convenience for **embedding default content** directly in code (optional).
  * Exceed `gettext`'s ability to handle **versioned content** through unique content ids.
  * Work out-the-box with plain text, Hiccup, **Reactjs**, ...
  * Easy, optional platform-appropriate support for simple **Markdown styles**.
@@ -68,7 +70,7 @@
 
 ```
 
-See the [wiki docs] for a more detailed discussion of Tempura's resource search behaviour.
+See the [wiki docs][] for a more detailed discussion of Tempura's resource search behaviour.
 
 ## Quickstart
 
@@ -153,7 +155,7 @@ And we're ready to go:
 (tr [:example/invalid [:div "My **fallback** div"]]) ; => [:div "My " [:strong "fallback"] " div"]
 ```
 
-And that's it, you know the [API]:
+And that's it, you know the [API][]:
 
 ```clojure
 (tr [opts locales resource-ids])               ; Without argument interpolation, or
@@ -196,7 +198,7 @@ I'll note that since the API is so pleasant, it's actually often much _less_ eff
 
 If it's easy to use, it'll be easy to get your developers in the habit of writing content this way - which means that there's a trivial path to adding multilingual support whenever it makes sense to do so.
 
-> See also the [wiki docs] for more info.
+> See also the [wiki docs][] for more info.
 
 ## FAQ
 
@@ -218,7 +220,7 @@ As an example:
 
 So performance is often on par with the best possible hand-optimized monolingual code.
 
-#### How would you use this with [Reagent], etc.?
+#### How would you use this with [Reagent][], etc.?
 
 Tempura was specifically designed to work with Reactjs applications, and works great with Reagent out-the-box.
 
@@ -240,29 +242,27 @@ Shouldn't be hard to do, you'll just need a conversion tool to/from edn. Haven't
 
 ## Contacting me / contributions
 
-Please use the project's [GitHub issues page] for all questions, ideas, etc. **Pull requests welcome**. See the project's [GitHub contributors page] for a list of contributors.
+Please use the project's [GitHub issues page][] for all questions, ideas, etc. **Pull requests welcome**. See the project's [GitHub contributors page][] for a list of contributors.
 
-Otherwise, you can reach me at [Taoensso.com]. Happy hacking!
+Otherwise, you can reach me at [Taoensso.com][]. Happy hacking!
 
-\- [Peter Taoussanis]
+\- [Peter Taoussanis][Taoensso.com]
 
 ## License
 
-Distributed under the [EPL v1.0] \(same as Clojure).  
-Copyright &copy; 2016-2022 [Peter Taoussanis].
+Distributed under the [EPL v1.0][] \(same as Clojure).  
+Copyright &copy; 2016-2022 [Peter Taoussanis][Taoensso.com].
 
 <!--- Standard links -->
 [Taoensso.com]: https://www.taoensso.com
-[Peter Taoussanis]: https://www.taoensso.com
-[@ptaoussanis]: https://www.taoensso.com
-[More by @ptaoussanis]: https://www.taoensso.com
-[Break Version]: https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md
+[Break Version]: https://github.com/taoensso/encore/blob/master/BREAK-VERSIONING.md
+[backers]: https://taoensso.com/clojure/backers
 
 <!--- Standard links (repo specific) -->
-[CHANGELOG]: https://github.com/ptaoussanis/tempura/releases
-[API]: http://ptaoussanis.github.io/tempura/
-[GitHub issues page]: https://github.com/ptaoussanis/tempura/issues
-[GitHub contributors page]: https://github.com/ptaoussanis/tempura/graphs/contributors
+[CHANGELOG]: https://github.com/taoensso/tempura/releases
+[API]: http://taoensso.github.io/tempura/
+[GitHub issues page]: https://github.com/taoensso/tempura/issues
+[GitHub contributors page]: https://github.com/taoensso/tempura/graphs/contributors
 [EPL v1.0]: https://raw.githubusercontent.com/ptaoussanis/tempura/master/LICENSE
 [Hero]: https://raw.githubusercontent.com/ptaoussanis/tempura/master/hero.png "Title"
 
@@ -271,4 +271,4 @@ Copyright &copy; 2016-2022 [Peter Taoussanis].
 [Reagent]: https://github.com/reagent-project/reagent
 [tutorial]: https://gist.github.com/field-theory/b7c05953e32645d880eae382171a85d7
 [@field-theory]: https://github.com/field-theory
-[wiki docs]: https://github.com/ptaoussanis/tempura/wiki
+[wiki docs]: https://github.com/taoensso/tempura/wiki

@@ -1,4 +1,4 @@
-> This project uses [Break Versioning](https://github.com/ptaoussanis/encore/blob/master/BREAK-VERSIONING.md)
+This project uses Break Versioning (https://www.taoensso.com/break-versioning)
 
 ## v1.5.3 - 2022 Oct 27
 
@@ -8,7 +8,7 @@
 
 > This is a major maintenance release that should be non-breaking for most users.
 
-* **New**: Wiki docs at https://github.com/ptaoussanis/tempura/wiki
+* **New**: Wiki docs at https://github.com/taoensso/tempura/wiki
 * **New**: Add `new-tr-fn` for creating `tr` partials with fn-local cache.
 * **BREAKING**: `wrap-ring-request` (alpha) API changes, see commit ed688af18de2 for details.
 
