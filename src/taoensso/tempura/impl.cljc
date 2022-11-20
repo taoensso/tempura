@@ -444,14 +444,14 @@
         acc resids))
     nil locale-splits))
 
-#_
-(defmacro vargs "Experimental. Compile-time `impl/vargs`."
-  [x]
-  (if (map? x)
-    (do
-      (assert (enc/revery? enc/pos-int? (keys x))
-        "All arg map keys must be +ive non-zero ints")
-      (impl/vargs x))
-    (have vector? x)))
+;; #?(:clj
+;;    (defmacro vargs "Experimental. Compile-time `impl/vargs`."
+;;      [x]
+;;      (if (map? x)
+;;        (do
+;;          (assert (enc/revery? enc/pos-int? (keys x))
+;;            "All arg map keys must be +ive non-zero ints")
+;;          (impl/vargs x))
+;;        (have vector? x))))
 
 #_(comment (macroexpand '(vargs {1 (do "1") 2 (do "2")})))

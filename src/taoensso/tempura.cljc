@@ -11,12 +11,13 @@
 (def ^:dynamic *tr-opts*  nil)
 (def ^:dynamic *tr-scope* nil)
 
-(defmacro with-tr-opts  [opts  & body] `(binding [*tr-opts*  ~opts]  ~@body))
-(defmacro with-tr-scope
-  "`(with-tr-scope :foo.bar (tr _ _ [:baz]))` is equivalent to
-   `(tr _ _ [:foo.bar/baz])`"
-  [scope & body]
-  `(binding [*tr-scope* ~scope] ~@body))
+#?(:clj (defmacro with-tr-opts [opts & body] `(binding [*tr-opts* ~opts] ~@body)))
+#?(:clj
+   (defmacro with-tr-scope
+     "`(with-tr-scope :foo.bar (tr _ _ [:baz]))` is equivalent to
+     `(tr _ _ [:foo.bar/baz])`"
+     [scope & body]
+     `(binding [*tr-scope* ~scope] ~@body)))
 
 ;;;;
 
@@ -159,14 +160,15 @@
 
      [rname] (impl/load-resource rname)))
 
-(defmacro load-resource-at-compile-time
-  "Experimental, subject to change.
-  Reads and inlines an edn resource on classpath, at compile-time.
-  Supported by: both clj and cljs.
+#?(:clj
+   (defmacro load-resource-at-compile-time
+     "Experimental, subject to change.
+     Reads and inlines an edn resource on classpath, at compile-time.
+     Supported by: both clj and cljs.
 
-  See also `load-resource-at-runtime`."
+     See also `load-resource-at-runtime`."
 
-  [rname] (impl/load-resource rname))
+     [rname] (impl/load-resource rname)))
 
 (comment (load-resource-at-compile-time "foo.edn"))
 
