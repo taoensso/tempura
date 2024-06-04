@@ -42,7 +42,7 @@
                 (enc/sb-append sb (str x1))
                 (enc/str-builder  (str x1))))))]
 
-    (if (and (== (count out) 2) (enc/kw-identical? (nth out 0) :span))
+    (if (and (== (count out) 2) (enc/identical-kw? (nth out 0) :span))
       (nth out 1)
       (do  out))))
 
