@@ -1,4 +1,17 @@
-This project uses Break Versioning (https://www.taoensso.com/break-versioning)
+This project uses [**Break Versioning**](https://www.taoensso.com/break-versioning).
+
+---
+
+# `v1.5.4` (2024-06-05)
+
+> **Dep/s**: Tempura is [on Clojars](https://clojars.org/com.taoensso/tempura/versions/1.5.4).  
+> **Versioning**: Tempura uses [Break Versioning](https://www.taoensso.com/break-versioning).
+
+This is a **non-breaking maintenance release** that updates dependencies and introduces a new [wiki](https://github.com/taoensso/tempura/wiki).
+
+\- [Peter Taoussanis](https://www.taoensso.com)
+
+---
 
 ## v1.5.3 - 2022 Oct 27
 

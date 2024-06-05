@@ -1,4 +1,4 @@
-(defproject com.taoensso/tempura "1.5.3"
+(defproject com.taoensso/tempura "1.5.4"
   :author "Peter Taoussanis <https://www.taoensso.com>"
   :description "Simple text localization library for Clojure/Script"
   :url "https://github.com/taoensso/tempura"

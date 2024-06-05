@@ -11,7 +11,7 @@ It offers a simple, easy-to-use API that allows you to **expand localization con
 
 ## Latest release/s
 
-- `2022-10-27` `v1.5.3`: [release info](../../releases/tag/v1.5.3)
+- `2024-06-05` `v1.5.4`: [release info](../../releases/tag/v1.5.4)
 
 [![Main tests][Main tests SVG]][Main tests URL]
 [![Graal tests][Graal tests SVG]][Graal tests URL]
