@@ -6,7 +6,7 @@
    [taoensso.encore       :as enc  :refer [have have?]]
    [taoensso.tempura.impl :as impl :refer []]))
 
-(enc/assert-min-encore-version [3 31 0])
+(enc/assert-min-encore-version [3 112 0])
 
 (def ^:dynamic *tr-opts*  nil)
 (def ^:dynamic *tr-scope* nil)
@@ -42,7 +42,7 @@
                 (enc/sb-append sb (str x1))
                 (enc/str-builder  (str x1))))))]
 
-    (if (and (== (count out) 2) (enc/kw-identical? (nth out 0) :span))
+    (if (and (== (count out) 2) (enc/identical-kw? (nth out 0) :span))
       (nth out 1)
       (do  out))))
 

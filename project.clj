@@ -8,16 +8,16 @@
    :url  "https://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies
-  [[com.taoensso/encore "3.31.0"]]
+  [[com.taoensso/encore "3.112.0"]]
 
   :test-paths ["test" #_"src"]
 
   :profiles
   {;; :default [:base :system :user :provided :dev]
-   :provided {:dependencies [[org.clojure/clojurescript "1.11.60"]
-                             [org.clojure/clojure "1.11.1"]]}
-   :c1.12    {:dependencies [[org.clojure/clojure "1.12.0-alpha9"]]}
-   :c1.11    {:dependencies [[org.clojure/clojure "1.11.1"]]}
+   :provided {:dependencies [[org.clojure/clojurescript "1.11.132"]
+                             [org.clojure/clojure "1.11.3"]]}
+   :c1.12    {:dependencies [[org.clojure/clojure "1.12.0-alpha12"]]}
+   :c1.11    {:dependencies [[org.clojure/clojure "1.11.3"]]}
    :c1.10    {:dependencies [[org.clojure/clojure "1.10.3"]]}
    :c1.9     {:dependencies [[org.clojure/clojure "1.9.0"]]}
 
@@ -27,7 +27,7 @@
     :aot [taoensso.graal-tests]
     :uberjar-name "graal-tests.jar"
     :dependencies
-    [[org.clojure/clojure                  "1.11.1"]
+    [[org.clojure/clojure                  "1.11.3"]
      [com.github.clj-easy/graal-build-time "1.0.5"]]}
 
    :dev
@@ -45,7 +45,7 @@
     [[lein-pprint    "1.3.2"]
      [lein-ancient   "0.7.0"]
      [lein-cljsbuild "1.1.8"]
-     [com.taoensso.forks/lein-codox "0.10.10"]]
+     [com.taoensso.forks/lein-codox "0.10.11"]]
 
     :codox
     {:language #{:clojure :clojurescript}
